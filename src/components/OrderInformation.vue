@@ -1,0 +1,677 @@
+<template>
+    <div class="container mt-5">
+
+        <div class="mt-5">
+
+            <ul class="table-list">
+                <router-link to="/salesmanagement" class="router-link ms-3" active-class="active-link">
+                    <span>Sales Management</span>
+                </router-link>
+
+                <router-link to="/orderinfo" class="router-link" active-class="active-link" >
+                    <span>Order Information</span>
+                </router-link>
+            </ul>
+
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mt-5">
+
+            <div>
+                <h4>Order Information</h4>
+            </div>
+
+            <div>
+                <!-- <span><img src="/PointOfSales.svg" alt="" data-bs-toggle="modal" data-bs-target="#posModal" style="cursor: pointer;"></span> -->
+                <span class="ms-3"><img src="/managereturns.svg" alt="" style="cursor: pointer;"></span>
+            </div>
+
+        </div>
+
+
+
+
+
+
+
+        <div class="mt-5">
+            <table class="table ">
+                <thead>
+                    <tr>
+                    <th scope="col">
+                        <span>SKU</span>
+                        <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
+                    </th>
+
+                    <th scope="col">
+                        <span>Statu</span>
+                        <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
+                    </th>
+
+                    <th scope="col">
+                        <span>Date</span>
+                        <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
+                    </th>
+
+                    <!-- <th scope="col">
+                        <span>Customer Phone no</span>
+                        <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
+                    </th> -->
+
+                    <th scope="col">
+                        <span>Amount</span>
+                        <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
+                    </th>
+
+                    <th scope="col">
+                        <span>Transaction ID</span>
+                        <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
+                    </th>
+
+                    <th scope="col">
+                       
+                    </th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sale in paginatedSales" :key="sale.transactionNumber">
+                   <td scope="row">{{ sale.reference }}</td>
+                    <td class="pt-4">
+                        <span v-if="sale.status === 'Completed'"><img src="/paidicon.svg" alt="Completed"></span>
+                        <span v-else-if="sale.status === 'Pending'"><img src="/pendingicon.svg" alt="Pending"></span>
+                        <span v-else-if="sale.status === 'Cancelled'"><img src="/cancelledicon.svg" alt="Cancelled"></span>
+
+                    </td>
+                    <td>{{ sale.created_at }}</td>
+                    <!-- <td></td> -->
+                    <td>{{ sale.amount }}</td>
+                    <td>{{ sale.transactionNumber }}</td>
+                    <td class="ms-5 pt-4">
+                        <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span>
+                        <span><img src="/downloadicon.svg" alt="" class="ps-3"  @click="downloadReceipt(sale)"  style="cursor: pointer;"></span>
+                        <span><img src="/printicon.svg" alt="" class="ps-3"  @click="printReceipt(sale)"  style="cursor: pointer;"></span>
+                    </td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-between">
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
+                    </li>
+                    <div class="d-flex">
+                        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                            <button class="page-link" @click="prevPage" :disabled="currentPage === 1">&lt;</button>
+                        </li>
+                        <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+                            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+                        </li>
+                        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                            <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">&gt;</button>
+                        </li>
+                    </div>
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+
+
+ 
+
+    <!-- Modal -->
+    <div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog viewSaleModalDailog">
+        
+
+            <div class="modal-content viewslemodal-content container text-light">
+
+                <div class="d-flex justify-content-between align-items-start mt-4">
+                    <div class="d-flex">
+                        <img src="/tabler_playlist-add.svg" alt="" class="me-3" style="height: 40px;">
+                        <div class="text-dark">
+                            <h5 class="mb-2">POS</h5>
+                            <p class="mb-0" style="width: 80%;">
+                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus repellendus est alias iure perspiciatis pariatur rerum nesciunt quibusdam at fuga modi.
+                            </p>
+                        </div>
+                    </div>
+                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;">
+                </div>
+
+
+                <div class="mainrapperx container mb-5 mt-4" style="height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
+                    <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh; border-radius: 20px;"> 
+                        
+                        <div class="text-dark d-flex justify-content-between" >
+                            <div>
+                                <span>List of items</span>
+                            </div>
+
+                            <div>
+                                <img src="/cleall.svg" alt="">
+                            </div>
+                        </div>
+                        <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="height: 38vh; border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
+                            <!-- Modal Header -->
+                        
+                            <form @submit.prevent="saveProductSales">
+
+                                <!-- Input Section -->
+                                <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+                                    
+                                    <span>
+                                        <h6>Item</h6>
+                                        <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" required>
+                                    </span>
+                                    <span>
+                                        <h6>Unit Price</h6>
+                                        <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" required>
+                                    </span>
+                                    <span>
+                                        <h6>Quantity</h6>
+                                        <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" required>
+                                    </span>
+                                    <span>
+                                        <h6>Amount</h6>
+                                        <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly>
+                                    </span>
+
+                                   
+                                
+                                    <!-- <img src="/deleteicon.svg" alt="Delete" style="height: 30px; cursor: pointer;"> -->
+                                </div>
+
+                                <!-- Footer Section -->
+        
+                                
+                                <div class="text-dark" style="margin-left: 80%; margin-top: 8%;">
+                                    <div>Total: {{ selectedSale.amount }}</div>
+                                </div>
+                                
+                            </form>    
+                        </div>
+                        <!-- <img src="/cancelTransaction.svg" alt=""> -->
+                        
+                    </div>
+
+                    <div class="d-flex justify-content-between" style="height: 100px;">
+
+                        <div class="d-flex justify-content-between">
+                            <img src="/saveTransaction.svg" alt="Add Item" class="img-fluid"  @click="updateStatus('Pending')">
+                            <img src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="updateStatus('Cancelled')">
+                        </div>
+
+                        <img src="/confirmTransaction.svg" alt="Confirm" class="img-fluid" style="height: 50px;" @click="updateStatus('Completed')">
+                       
+                    </div>
+                </div>
+
+
+            </div>
+
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="posModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content container text-light">
+
+                <div class="d-flex justify-content-between align-items-start mt-5">
+                    <div class="d-flex">
+                        <img src="/tabler_playlist-add.svg" alt="" class="me-3" style="height: 40px;">
+                        <div class="text-dark">
+                            <h5 class="mb-2">create POS</h5>
+                            <p class="mb-0" style="width: 80%;">
+                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus repellendus est alias iure perspiciatis pariatur rerum nesciunt quibusdam at fuga modi.
+                            </p>
+                        </div>
+                    </div>
+                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;">
+                </div>
+
+
+
+
+                <div class="mainrapperx container mb-5 mt-4" style="height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
+                    <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh; border-radius: 20px;"> 
+                        
+                        <div class="text-dark d-flex justify-content-between" >
+                            <div>
+                                <span>List of items</span>
+                            </div>
+
+                            <div>
+                                <img src="/cleall.svg" alt="">
+                            </div>
+                        </div>
+                        <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="height: 38vh; border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
+                            <!-- Modal Header -->
+                        
+                            <form @submit.prevent="saveProductSales">
+
+                                <!-- Input Section -->
+                                <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+                                    
+                                    <span>
+                                        <h6>Item</h6>
+                                        <input type="text" class="form-control" v-model="item" style="width: 200px;" required>
+                                    </span>
+                                    <span>
+                                        <h6>Unit Price</h6>
+                                        <input type="text" class="form-control" v-model="unit_price" style="width: 200px;" required>
+                                    </span>
+                                    <span>
+                                        <h6>Quantity</h6>
+                                        <input type="text" class="form-control" v-model="quantity" style="width: 200px;" required>
+                                    </span>
+                                    <span>
+                                        <h6>Amount</h6>
+                                        <input type="text" class="form-control" v-model="amount" style="width: 200px;" readonly>
+                                    </span>
+
+                                </div>
+
+                                <!-- Footer Section -->
+        
+                                
+                                <div class="text-dark" style="margin-left: 80%; margin-top: 8%;">
+                                    <div>Total: {{ amount }}</div>
+                                </div>
+                                
+                            </form>    
+                        </div>
+                        <!-- <img src="/cancelTransaction.svg" alt=""> -->
+                        
+                    </div>
+
+                    <div class="d-flex justify-content-between" style="height: 100px;">
+
+                        <div class="d-flex justify-content-between">
+                            <img src="/saveTransaction.svg" alt="Add Item" class="img-fluid"  @click="saveProductSales('Pending')">
+                            <img src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="saveProductSales('Cancelled')">
+                        </div>
+
+                        <img src="/confirmTransaction.svg" alt="Confirm" class="img-fluid" style="height: 50px;" @click="saveProductSales('Completed')">
+                       
+                    </div>
+                </div>
+                            
+               
+                            
+
+            </div>
+        </div>
+    </div>
+
+</template>
+
+<script>
+
+import { openSalesDB, addSale, getAllSales, updateSale } from '../utils/salesDB.js';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+
+export default{
+
+    data() {
+        return {
+            item:"",
+            unit_price:"",
+            quantity:"",
+            amount:"",
+            status:"",
+            sales: [],
+            filteredSales: [],
+            currentPage: 1,
+            pageSize: 3,
+            selectedSale: {},
+            searchTransactionNumber: "",
+
+        }
+    },
+
+
+    mounted() {
+        this.loadSales()
+    },
+
+    watch: {
+        unit_price: 'calculateAmount',
+        quantity: 'calculateAmount'
+    },
+
+
+    computed: {
+        sortedSales() {
+            return this.filteredSales.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        },
+
+
+        paginatedSales() {
+            const start = (this.currentPage - 1) * this.pageSize;
+            const end = start + this.pageSize;
+            return this.sortedSales.slice(start, end);
+        },
+
+        totalPages() {
+            // return Math.ceil(this.sortedSales.length / this.pageSize);
+            return Math.ceil(this.filteredSales.length / this.pageSize);
+
+        }
+    },
+
+
+
+    methods: {
+        calculateAmount() {
+            this.amount = this.unit_price * this.quantity;
+        },
+
+        async saveProductSales(status) {
+            const referenceNumber = `FB${Math.floor(100000000 + Math.random() * 900000000)}`;
+            const transactionNumber = `#${Math.floor(100000000 + Math.random() * 900000000)}`;
+
+            try {
+                const db = await openSalesDB();
+                const newSale = {
+                    item: this.item,
+                    unit_price: this.unit_price,
+                    quantity: this.quantity,
+                    amount: this.amount,
+                    reference: referenceNumber, 
+                    transactionNumber: transactionNumber,
+                    status: status,
+                    created_at: new Date().toLocaleString(),
+
+                };
+                await addSale(db, newSale);
+                alert('Sale added successfully');
+                // this.item = "";
+                // this.unit_price = "";
+                // this.quantity = "";
+                // this.amount = "";
+                window.location.reload()
+            } catch (error) {
+                console.error('Error adding sale:', error);
+                alert('Failed to add sale');
+            }
+        },
+
+        async loadSales() {
+            try {
+                const db = await openSalesDB();
+                const sales = await getAllSales(db);
+                console.log(sales);
+                
+                this.sales = sales;
+                this.filteredSales= this.sales;
+
+            } catch (error) {
+                console.error("Error loading saless:", error);
+            }
+        },
+
+
+        searchSalesProduct() {
+            const query = this.searchTransactionNumber.trim().toLowerCase();
+
+            if (query === "") {
+                this.filteredSales = this.sales;
+            } else {
+                this.filteredSales = this.sales.filter((sale) => {
+                return sale.transactionNumber && sale.transactionNumber.toLowerCase().includes(query);
+                });
+            }
+            this.currentPage = 1;
+        },
+
+
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+
+        goToPage(page) {
+            this.currentPage = page;
+        },
+
+        viewSale(sale) {
+            this.selectedSale = sale;
+        },
+        async updateStatus(status) {
+            try {
+                const db = await openSalesDB();
+                const updatedSale = {
+                    ...this.selectedSale,
+                    status: status
+                };
+                await updateSale(db, updatedSale);
+                alert(`Sale status updated to ${status}`);
+                this.loadSales(); // Reload sales data
+                window.location.reload()
+            } catch (error) {
+                console.error('Error updating sale status:', error);
+                alert('Failed to update sale status');
+            }
+        },
+
+
+        // downloadExcel() {
+        //     const ws = XLSX.utils.json_to_sheet(this.sales);
+        //     const wb = XLSX.utils.book_new();
+        //     XLSX.utils.book_append_sheet(wb, ws, "Sales");
+        //     XLSX.writeFile(wb, "SalesData.xlsx");
+        // },
+
+
+        downloadExcel() {
+            // Prepare data for Excel
+            const worksheetData = this.sales.map((sale) => ({
+                Item: sale.item,
+                SKU: sale.reference,
+                Status: sale.status,
+                Date: sale.created_at,
+                Amount: sale.amount,
+                Unit_Price: sale.unit_price,
+                Quantity: sale.quantity,
+                TransactionID: sale.transactionNumber,
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+
+            const workbook = XLSX.utils.book_new();
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+            XLSX.writeFile(workbook, "SalesData.xlsx");
+
+        },
+
+        downloadReceipt(sale) {
+            const doc = new jsPDF();
+            doc.text(`Receipt for Transaction: ${sale.transactionNumber}`, 10, 10);
+            doc.text(`Item: ${sale.item}`, 10, 20);
+            doc.text(`Unit Price: ${sale.unit_price}`, 10, 30);
+            doc.text(`Quantity: ${sale.quantity}`, 10, 40);
+            doc.text(`Amount: ${sale.amount}`, 10, 50);
+            doc.text(`Status: ${sale.status}`, 10, 60);
+            doc.text(`Date: ${sale.created_at}`, 10, 70);
+            doc.text(`SKU: ${sale.reference}`, 10, 80);
+            doc.save(`Receipt_${sale.transactionNumber}.pdf`);
+        },
+
+
+        printReceipt(sale) {
+            const doc = new jsPDF();
+            doc.text(`Receipt for Transaction: ${sale.transactionNumber}`, 10, 10);
+            doc.text(`Item: ${sale.item}`, 10, 20);
+            doc.text(`Unit Price: ${sale.unit_price}`, 10, 30);
+            doc.text(`Quantity: ${sale.quantity}`, 10, 40);
+            doc.text(`Amount: ${sale.amount}`, 10, 50);
+            doc.text(`Status: ${sale.status}`, 10, 60);
+            doc.text(`Date: ${sale.created_at}`, 10, 70);
+            doc.text(`SKU: ${sale.reference}`, 10, 80);
+            doc.autoPrint();
+            window.open(doc.output('bloburl'), '_blank');
+        }
+
+        
+    }
+
+  
+}
+
+</script>
+
+<style scoped>
+
+
+.active-link {
+        border-bottom: 2px solid green;
+        color: green !important;
+    }
+
+    .mainwrapper {
+        background-color: #eff3f4;
+        padding: 20px;
+        margin-top: 3%;
+        margin-bottom: 5%;
+        margin-left: 0%;
+        margin-right: 8%;
+        border-radius: 15px;
+    }
+
+
+    .wrapper {
+        background-color: #f7f7f7;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        margin-top: 3%;
+        margin-left: 1%;
+        margin-right: 1%;
+        padding: 20px;
+    }
+
+    .modal-content h6 {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .modal-content input {
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+    }
+
+    .modal-content img {
+        max-height: 50px;
+        cursor: pointer;
+    }
+
+    .modal-header {
+        margin-bottom: 20px;
+    }
+
+    .flex-wrap > span {
+        margin-bottom: 15px; /* Adds spacing between inputs for responsiveness */
+    }
+
+    .modal-content {
+        border-radius: 30px !important;
+    }
+
+    .modal-dialog {
+        max-width: 150vw;
+        border-radius: 100px !important;
+    }
+
+    .table-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 3rem;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .table-list .router-link {
+        font-weight: bold;
+        color: #646464;
+        text-decoration: none;
+    }
+
+
+    .table-no-border th,
+    .table-no-border td {
+        border: none;
+    }
+
+    td {
+        padding-top: 30px; /* Top padding */
+        padding-bottom: 18px; /* Bottom padding  */
+    }
+
+    .input-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .input-container input {
+        width: 250px;
+        padding: 10px 10px 10px 45px;
+        font-size: 16px;
+        background-color: #bababa;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+    }
+
+    .input-container img {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        width: 25px;
+        height: 25px;
+        pointer-events: none;
+    }
+
+
+    .btn1{
+        width: 200px;
+        border-radius: 10px;
+        border: 0.1px solid #c8c8c86f;
+        background-color: #fff;
+    }
+
+    /* .viewslemodal-content {
+        background-color: #1dc1ea;
+    } */
+
+    /* .viewsalewrapper {
+        background-color: #006d88;
+        height:30vh;
+        margin-top: 1%;
+    } */
+
+
+</style>

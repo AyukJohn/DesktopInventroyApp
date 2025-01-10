@@ -10,6 +10,12 @@ npm install
 npm run serve
 ```
 
+
+### Compiles and hot-reloads for Desktop development
+```
+npm run electron:serve
+```
+
 ### Compiles and minifies for production
 ```
 npm run build
@@ -19,6 +25,13 @@ npm run build
 ```
 npm run lint
 ```
+
+
+### Compiles and minifies for Desktop production
+```
+npm run electron:build
+
+
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
