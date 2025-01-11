@@ -147,7 +147,7 @@
 
                         </div>
 
-                        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Saepe explicabo consectetur doloremque omnis.</p>
+                        <!-- <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Saepe explicabo consectetur doloremque omnis.</p> -->
 
 
                     <form @submit.prevent="saveProductInfo">
@@ -157,7 +157,7 @@
                             <div class="select-container">
                                 <div class="select-box">
                                     <label for="fragrance" class="select-label">Brand Name</label>
-                                <input type="text form-control"   v-model="brandName" class="mt-2" placeholder="Brand Name" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <input type="text form-control"   v-model="brandName" class="mt-2" placeholder="BrandName(size)" style="outline:none; border: none; width: 150px; height: 30px;" required>
                                 </div>
                             </div>
 
@@ -200,43 +200,27 @@
                             <div class="select-container">
                                 <div class="select-box">
                                     <label for="fragrance" class="select-label">Size</label>
-                                <input type="text form-control"   v-model="sizeType_1" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
-                                </div>
-                            </div>
-
-                      
-                            <div class="select-container">
-                                <div class="select-box">
-                                    <label for="fragrance" class="select-label">Size</label>
-                                <input type="text form-control"   v-model="sizeType_2" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
-                                </div>
-                            </div>
-
-
-                            <div class="select-container">
-                                <div class="select-box">
-                                    <label for="fragrance" class="select-label">Size</label>
-                                <input type="text form-control"   v-model="sizeType_3" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <input type="text form-control"   v-model="size" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
                                 </div>
                             </div>
                             
 
-                        </div>
+                        <!-- </div>
 
 
-                        <div class="d-flex mt-3 align-items-center justify-content-around" style="gap: 16px;">
+                        <div class="d-flex mt-3 align-items-center justify-content-around" style="gap: 16px;"> -->
 
                             <div class="select-container">
                                 <div class="select-box">
                                     <label for="fragrance" class="select-label">Selling Price</label>
-                                <input type="text form-control"   v-model="sellingPrice" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <input type="text form-control"   v-model="sellingPrice" class="mt-2" placeholder="Selling Price" style="outline:none; border: none; width: 150px; height: 30px;" required>
                                 </div>
                             </div>
 
                             <div class="select-container">
                                 <div class="select-box">
                                     <label for="fragrance" class="select-label">Cost Price</label>
-                                <input type="text form-control"   v-model="costPrice" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <input type="text form-control"   v-model="costPrice" class="mt-2" placeholder="CostPrice" style="outline:none; border: none; width: 150px; height: 30px;" required>
                                 </div>
                             </div>
 
@@ -374,31 +358,20 @@
                     </div>
 
                     <div class="d-flex mt-3 align-items-center justify-content-between" style="gap: 16px;">
+
                         <div class="select-container">
                             <div class="select-box">
                                 <label for="sizeType_1" class="select-label">Size</label>
-                                <input type="text" class="mt-2" v-model="selectedProduct.sizeType_1" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <input type="text" class="mt-2" v-model="selectedProduct.size" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
                             </div>
                         </div>
 
-                        <div class="select-container">
-                            <div class="select-box">
-                                <label for="sizeType_2" class="select-label">Size</label>
-                                <input type="text" class="mt-2" v-model="selectedProduct.sizeType_2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
-                            </div>
-                        </div>
-
-                        <div class="select-container">
-                            <div class="select-box">
-                                <label for="sizeType_3" class="select-label">Size</label>
-                                <input type="text" class="mt-2" v-model="selectedProduct.sizeType_3" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- </div>
 
                     
                     
-                    <div class="d-flex align-items-center ms-0 mr-5" style="gap: 16px; margin-top: 1%;">
+                    <div class="d-flex align-items-center ms-0 mr-5" style="gap: 16px; margin-top: 1%;"> -->
+
                      <div class="select-container">
                             <div class="select-box">
                                 <label for="sizeType_3" class="select-label">Selling Price</label>
@@ -633,9 +606,7 @@ export default {
       brandName: "",
       fragranceFamily: "",
       gender: "",
-      sizeType_1: "",
-      sizeType_2: "",
-      sizeType_3: "",
+      size: "",
       sellingPrice: "",
       costPrice: "",
       description: "",
@@ -657,9 +628,7 @@ export default {
         productInventory: '',
         fragranceFamily: "",
         gender: "",
-        sizeType_1: "",
-        sizeType_2: "",
-        sizeType_3: "",
+        size: "",
         // other fields
       },
 
@@ -768,9 +737,7 @@ export default {
                 brandName: this.brandName,
                 fragranceFamily: this.fragranceFamily,
                 gender: this.gender,
-                sizeType_1: this.sizeType_1,
-                sizeType_2: this.sizeType_2,
-                sizeType_3: this.sizeType_3,
+                size: this.size,
                 sellingPrice: this.sellingPrice,
                 costPrice: this.costPrice,
                 description: this.description,
@@ -785,8 +752,9 @@ export default {
                 alert('Product added successfully!');
                 console.log(newProduct);
 
-                // this.clearForm();
                 this.loadProducts();
+                this.resetForm();
+                
             } catch (error) {
                 console.error("Error saving product:", error);
             }
@@ -856,9 +824,7 @@ export default {
             BrandName: product.brandName,
             FragranceFamily: product.fragranceFamily,
             Gender: product.gender,
-            SizeType1: product.sizeType_1,
-            SizeType2: product.sizeType_2,
-            SizeType3: product.sizeType_3,
+            Size: product.size,
             Selling_Price: product.sellingPrice,
             Cost_Price: product.costPrice,
             Description: product.description,
@@ -879,9 +845,7 @@ export default {
             this.brandName = "";
             this.fragranceFamily = "";
             this.gender = "";
-            this.sizeType_1 = "";
-            this.sizeType_2 = "";
-            this.sizeType_3 = "";
+            this.size = "";
             this.sellingPrice = "";
             this.costPrice = "";
             this.description = "";

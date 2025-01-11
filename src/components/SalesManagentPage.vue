@@ -62,7 +62,7 @@
                     </th>
 
                     <th scope="col">
-                        <span>Statu</span>
+                        <span>Status</span>
                         <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
                     </th>
 
@@ -159,7 +159,7 @@
                             </p>
                         </div>
                     </div>
-                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;">
+                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;"  data-bs-dismiss="modal" aria-label="Close">
                 </div>
 
 
@@ -257,7 +257,7 @@
                             </p>
                         </div>
                     </div>
-                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;">
+                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;"  data-bs-dismiss="modal" aria-label="Close">
                 </div>
 
 
@@ -285,7 +285,7 @@
                                     
                                     <span>
                                         <h6>Item</h6>
-                                        <input type="text" class="form-control" v-model="item" style="width: 200px;" required>
+                                        <input type="text" class="form-control" placeholder="ITEM(size)" v-model="item" style="width: 200px;" required>
                                     </span>
                                     <span>
                                         <h6>Unit Price</h6>
@@ -828,7 +828,7 @@ export default defineComponent({
         }
 
         this.loadSales();
-        // window.location.reload();
+        window.location.reload();
       } catch (error) {
         console.error('Error updating sale status:', error);
         alert('Failed to update sale status');

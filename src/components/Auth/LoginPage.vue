@@ -1,100 +1,135 @@
 <template>
   <div class="auth-container">
     <div class="form-wrapper">
-      <h2 class="title">Login to Your Account</h2>
+      <h2 class="title">Login</h2>
 
       <form @submit.prevent="login" class="form">
         <div class="form-group">
-          <label for="name">Username</label>
-          <input v-model="name" type="text" id="name" placeholder="Enter your username" required />
+          <label for="email">Email</label>
+          <input
+            v-model="email"
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            required
+          />
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input v-model="password" type="password" id="password" placeholder="Enter your password" required />
+          <input
+            v-model="password"
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            required
+          />
         </div>
 
-        <button type="submit" class="btn primary-btn">Login</button>
+        <button
+          type="submit"
+          class="btn primary-btn"
+          :disabled="isLoading"
+        >
+          Login
+        </button>
       </form>
 
+      <!-- Loading animation -->
+      <div v-if="isLoading" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Connecting...</p>
+      </div>
+
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-
-      <!-- <p class="redirect-text">
-        Don't have an account? <router-link to="/register">Register</router-link>
-      </p> -->
-
-      <!-- <p class="forgot-password">
-        <router-link to="/reset-password">Forgot password?</router-link>
-      </p> -->
     </div>
   </div>
 </template>
 
 <script>
-import { openDB, getAllUsers } from "../../utils/userDB";
-import CryptoJS from "crypto-js";
+import axios from "axios";
 
 export default {
   data() {
     return {
-      name: "",  // Using 'name' as the field for the username
+      email: "",
       password: "",
       errorMessage: "",
-      rememberMe: false, // Remember Me checkbox
+      isLoading: false, // State to track loading
     };
   },
   methods: {
+    async login() {
+      this.isLoading = true; // Start loading animation
+      this.errorMessage = ""; // Clear previous errors
 
-async login() {
-  try {
-    const db = await openDB();
-    console.log("Database opened successfully");
+      try {
+        const response = await axios.post(
+          "https://backendpro.elechiperfumery.com.ng/api/v1/users/login",
+          {
+            email: this.email,
+            password: this.password,
+          }
+        );
 
-    // Retrieve all users from the database
-    const users = await getAllUsers(db);
-    const user = users.find(user => user.name === this.name);  // Find user by name
-    console.log("User retrieved:", user);
-
-    // Check if user exists
-    if (!user) {
-      this.errorMessage = "User not found";
-      return;
-    }
-
-    // Hash the entered password
-    const hashedPassword = CryptoJS.SHA256(this.password).toString(CryptoJS.enc.Base64);
-
-    // Validate password
-    if (user.password === hashedPassword) {
-      localStorage.setItem("loggedIn", "true");
-  
-        localStorage.setItem("name", this.name);
-        const storedName = localStorage.getItem("name");
-        console.log(storedName);
-        
-      // this.$router.push("/");
-      window.location.replace('/'); 
-    } else {
-      this.errorMessage = "Invalid username or password";
-    }
-  } catch (error) {
-    console.error("Error during login:", error);
-    if (error.name === 'DatabaseError') {
-      this.errorMessage = "Database error occurred";
-    } else {
-      this.errorMessage = "An unknown error occurred";
-    }
-  }
-}
-
-
-
+        if (response.data.access_token) {
+          const name = response.data.user.name;
+          localStorage.setItem("authToken", response.data.access_token);
+          localStorage.setItem("name", name);
+          window.location.replace("/");
+        } else {
+          this.errorMessage =
+            response.data.message || "Login failed. Please try again.";
+        }
+      } catch (error) {
+        console.error("Error during login:", error);
+        if (error.response && error.response.data) {
+          this.errorMessage =
+            error.response.data.message || "Invalid email or password.";
+        } else {
+          this.errorMessage = "An unknown error occurred. Please try again.";
+        }
+      } finally {
+        this.isLoading = false; // Stop loading animation
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
-/* General container */
+/* Loading spinner container */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3; /* Light gray */
+  border-top: 4px solid #31890e; /* Blue */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner p {
+  margin-top: 10px;
+  color: #0066cc;
+  font-size: 14px;
+}
+
 .auth-container {
   display: flex;
   justify-content: center;
@@ -103,10 +138,9 @@ async login() {
   background-color: #f4f7fc;
 }
 
-/* Form wrapper */
 .form-wrapper {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 30px;
   width: 100%;
@@ -127,7 +161,6 @@ async login() {
   gap: 20px;
 }
 
-/* Form field */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -139,8 +172,7 @@ async login() {
   color: #555;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ddd;
@@ -149,12 +181,10 @@ async login() {
   transition: border-color 0.3s;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   border-color: #0066cc;
 }
 
-/* Buttons */
 .btn {
   padding: 12px;
   font-size: 16px;
@@ -167,61 +197,24 @@ async login() {
 }
 
 .primary-btn {
-  background-color: #0066cc;
+  background-color: #329141;
+  border-radius: 12px;
   color: white;
   border: none;
 }
 
-.primary-btn:hover {
-  background-color: #004a99;
+.primary-btn:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
 }
 
-.remember-me {
-  text-align: left;
-}
-
-.forgot-password {
-  margin-top: 10px;
-}
-
-.forgot-password a {
-  color: #0066cc;
-  text-decoration: none;
-}
-
-.forgot-password a:hover {
-  text-decoration: underline;
+.primary-btn:hover:enabled {
+  background-color: #388032;
 }
 
 .error {
   color: #e74c3c;
   font-size: 14px;
   text-align: center;
-}
-
-.redirect-text {
-  text-align: center;
-  font-size: 14px;
-  color: #555;
-}
-
-.redirect-text a {
-  color: #0066cc;
-}
-
-.redirect-text a:hover {
-  text-decoration: underline;
-}
-
-/* Responsive design */
-@media (max-width: 600px) {
-  .form-wrapper {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .title {
-    font-size: 20px;
-  }
 }
 </style>

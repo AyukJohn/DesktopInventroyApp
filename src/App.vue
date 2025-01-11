@@ -26,3 +26,6 @@ import HeaderPage from './components/layouts/HeaderPage.vue'
 
 
 
+<style>
+</style>
+

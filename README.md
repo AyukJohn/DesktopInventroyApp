@@ -1,4 +1,4 @@
-# invent-frontend
+# Inventory-frontend
 
 ## Project setup
 ```
@@ -30,8 +30,3 @@ npm run lint
 ### Compiles and minifies for Desktop production
 ```
 npm run electron:build
-
-
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
