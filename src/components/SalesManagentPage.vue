@@ -24,7 +24,7 @@
 
             <div>
                 <span><img src="/PointOfSales.svg" alt="" data-bs-toggle="modal" data-bs-target="#posModal" style="cursor: pointer;"></span>
-                <span class="ms-3"><img src="/SaleReport.svg" alt="" style="cursor: pointer;"  data-bs-toggle="modal" data-bs-target="#salesreportModal"></span>
+                <span v-if="isAdmin"  class="ms-3"><img src="/SaleReport.svg" alt="" style="cursor: pointer;"  data-bs-toggle="modal" data-bs-target="#salesreportModal"></span>
             </div>
 
         </div>
@@ -154,9 +154,9 @@
                         <img src="/tabler_playlist-add.svg" alt="" class="me-3" style="height: 40px;">
                         <div class="text-dark">
                             <h5 class="mb-2">POS</h5>
-                            <p class="mb-0" style="width: 80%;">
+                            <!-- <p class="mb-0" style="width: 80%;">
                                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus repellendus est alias iure perspiciatis pariatur rerum nesciunt quibusdam at fuga modi.
-                            </p>
+                            </p> -->
                         </div>
                     </div>
                     <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;"  data-bs-dismiss="modal" aria-label="Close">
@@ -252,9 +252,9 @@
                         <img src="/tabler_playlist-add.svg" alt="" class="me-3" style="height: 40px;">
                         <div class="text-dark">
                             <h5 class="mb-2">create POS</h5>
-                            <p class="mb-0" style="width: 80%;">
+                            <!-- <p class="mb-0" style="width: 80%;">
                                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus repellendus est alias iure perspiciatis pariatur rerum nesciunt quibusdam at fuga modi.
-                            </p>
+                            </p> -->
                         </div>
                     </div>
                     <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;"  data-bs-dismiss="modal" aria-label="Close">
@@ -357,7 +357,7 @@
               
               <div class="title">
                 <h3>Sales Report</h3>
-                <p>Parchment be turns stand veela fawkes mistletoe snare drops.</p>
+                <!-- <p>Parchment be turns stand veela fawkes mistletoe snare drops.</p> -->
               </div>
 
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -473,6 +473,7 @@ export default defineComponent({
       pageSize: 4,
       selectedSale: {},
       searchTransactionNumber: "",
+      isAdmin: false,
     };
   },
 
@@ -585,10 +586,16 @@ export default defineComponent({
 
   mounted() {
     this.loadSales();
-    let userLogin = localStorage.getItem('name');
-        if (!userLogin) {
-            this.$router.push({ name: 'login' });
-        } 
+
+    const userLogin = localStorage.getItem('name');
+    if (!userLogin) {
+      this.$router.push({ name: 'login' });
+    } else {
+      this.name = userLogin;
+      // Check if the logged-in user is 'Admin'
+      this.isAdmin = this.name === 'Admin';
+    }
+
   },
 
   watch: {
@@ -673,11 +680,8 @@ export default defineComponent({
           const productName = this.item;
           const product = products.find(p => p.brandName === productName);
 
-          if (this.quantity > product.productInventory) {
-            alert(`Insufficient inventory for product: ${productName}`);
-            
-          } else {
-            
+          console.log(product.productInventory);
+
             if (product) {
               // Subtract the quantity sold from product inventory
               const newInventory = product.productInventory - this.quantity;
@@ -696,8 +700,6 @@ export default defineComponent({
             } else {
               alert(`Product not found: ${productName}`);
             }
-
-          }
 
 
         }
@@ -796,10 +798,7 @@ export default defineComponent({
           console.log(this.selectedSale.quantity);
 
 
-          if (this.selectedSale.quantity > product.productInventory) {
-            alert(`Insufficient inventory for product: ${productName}`);
-            
-          } else {
+    
 
             if (product) {
               // Subtract the quantity from product inventory
@@ -820,8 +819,6 @@ export default defineComponent({
             } else {
               alert(`Product not found: ${productName}`);
             }
-
-          }
 
 
 

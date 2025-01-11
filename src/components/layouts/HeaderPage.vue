@@ -24,7 +24,7 @@
             <span class="pt-1 ps-2">Sales and Orders</span>
           </router-link>
 
-          <router-link to="/analytics" class="nav-link ms-2">
+          <router-link v-if="name === 'Admin'"  to="/analytics" class="nav-link ms-2">
             <span><img src="/chart-bar-line.svg" alt="" /></span>
             <span class="pt-1 ps-2">Analytics</span>
           </router-link>

@@ -37,23 +37,30 @@
         <div class="mt-5">
             <ul class="table-list">
                 <li class="ms-3 cursor-pointer" @click="filterCategory('all')"><span>All</span></li>
-                <li @click="filterCategory('fragrance')" class="cursor-pointer"><span>Fragrance Family</span></li>
-                <li @click="filterCategory('gender')" class="cursor-pointer"><span>Gender</span></li>
+                <li @click="filterCategory('category')" class="cursor-pointer"><span>Category</span></li>
+                <li @click="filterCategory('type')" class="cursor-pointer"><span>Type</span></li>
             </ul>
         </div>
 
-        <div class="mt-4" v-if="selectedCategory === 'fragrance'">
+        <div class="mt-4" v-if="selectedCategory === 'category'">
             <ul class="table-list2">
-                <li class="ms-4" @click="filterSubCategory('woody')"><span>woody</span></li>
-                <li class="ms-3" @click="filterSubCategory('floral')"><span>floral</span></li>
-                <li class="ms-3" @click="filterSubCategory('seduction')"><span>seduction</span></li>
+                
+                <li class="ms-4" @click="filterSubCategory('rollon')"><span>Rollon</span></li>
+                <li class="ms-3" @click="filterSubCategory('airfreshness')"><span>Airfreshness</span></li>
+                <li class="ms-3" @click="filterSubCategory('bodysplash')"><span>Bodysplash</span></li>
+                <li class="ms-3" @click="filterSubCategory('deodorantspray')"><span>deodorantspray</span></li>
+                <li class="ms-3" @click="filterSubCategory('bodymist')"><span>Bodymist</span></li>
+                <li class="ms-3" @click="filterSubCategory('roomdiffusers')"><span>Roomdiffusers</span></li>
+                <li class="ms-3" @click="filterSubCategory('perfume')"><span>Perfume</span></li>
+
+
             </ul>
         </div>
 
-        <div class="mt-4" v-if="selectedCategory === 'gender'">
+        <div class="mt-4" v-if="selectedCategory === 'type'">
             <ul class="table-list2">
-                <li class="ms-4" @click="filterSubCategory('male')"><span>male</span></li>
-                <li class="ms-3" @click="filterSubCategory('female')"><span>female</span></li>
+                <li class="ms-4" @click="filterSubCategory('regular')"><span>Regular</span></li>
+                <li class="ms-3" @click="filterSubCategory('designers')"><span>Designers</span></li>
             </ul>
         </div>
 
@@ -163,13 +170,19 @@
 
                             <div class="select-container">
                                 <div class="select-box">
-                                    <label for="fragrance" class="select-label">Fragrance Family</label>
-                                    <select v-model="fragranceFamily" class="mt-2 select-custom" required>
-                                        <option value="" disabled>Select Fragrance Family</option>
-                                        <!-- <option value="floral">Floral</option> -->
-                                        <option value="woody">woody</option>
-                                        <option value="fresh">floral</option>
-                                        <option value="oriental">seduction</option>
+
+                                    <label for="fragrance" class="select-label">Category</label>
+                                    <select v-model="category" class="mt-2 select-custom" required>
+                                        <option value="" disabled>Select Category</option>
+                                        
+                                        <option value="rollon">Rollon</option>
+                                        <option value="airfreshness">Air Freshness</option>
+                                        <option value="bodysplash">Body Splash</option>
+                                        <option value="deodorantspray">Deodorant Spray</option>
+                                        <option value="bodymist">Body Mist</option>
+                                        <option value="roomdiffusers">Room Diffusers</option>
+                                        <option value="perfume">Perfume</option>
+
                                     </select>
                                 <!-- <input type="text form-control"   v-model="fragranceFamily" class="mt-2" placeholder="Fragrance Family" style="outline:none; border: none; width: 150px; height: 30px;" required> -->
                                 </div>
@@ -178,13 +191,13 @@
 
                             <div class="select-container">
                                 <div class="select-box">
-                                    <label for="fragrance" class="select-label">Gender</label>
-                                    <select v-model="gender" class="mt-2 select-custom" required>
-                                        <option value="" disabled>Select Gender</option>
-                                        <option value="male">male</option>
-                                        <option value="female">female</option>
-                                        <option value="unisex">unisex</option>
+                                    <label for="fragrance" class="select-label">Type</label>
+                                    <select v-model="type" class="mt-2 select-custom" required>
+                                        <option value="" disabled>Select Type</option>
+                                        <option value="regular">Regular</option>
+                                        <option value="designers">Designers</option>
                                     </select>
+
                                 <!-- <input type="text form-control"   v-model="gender" class="mt-2" placeholder="Gender" style="outline:none; border: none; width: 150px; height: 30px;"  required> -->
                                 </div>
                             </div>
@@ -344,15 +357,15 @@
 
                         <div class="select-container">
                             <div class="select-box">
-                                <label for="fragranceFamily" class="select-label">Fragrance Family</label>
-                                <input type="text" class="mt-2" v-model="selectedProduct.fragranceFamily" placeholder="Fragrance Family" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <label for="fragranceFamily" class="select-label">Category</label>
+                                <input type="text" class="mt-2" v-model="selectedProduct.category" placeholder="Category" style="outline:none; border: none; width: 150px; height: 30px;" required>
                             </div>
                         </div>
 
                         <div class="select-container">
                             <div class="select-box">
-                                <label for="gender" class="select-label">Gender</label>
-                                <input type="text" v-model="selectedProduct.gender" class="mt-2" placeholder="Gender" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                <label for="gender" class="select-label">Type</label>
+                                <input type="text" v-model="selectedProduct.type" class="mt-2" placeholder="Type" style="outline:none; border: none; width: 150px; height: 30px;" required>
                             </div>
                         </div>
                     </div>
@@ -430,7 +443,7 @@
                         <span><img src="distribution.svg" alt=""></span>
                         <span class="ps-2">
                             <h4>Suppliers Info</h4>
-                            <p style="padding-right: 40%;">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Praesentium distinctio corporis totam qui esse tenetur nulla</p>
+                            <!-- <p style="padding-right: 40%;">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Praesentium distinctio corporis totam qui esse tenetur nulla</p> -->
                         </span>
                     </span>
     
@@ -604,8 +617,8 @@ export default {
   data() {
     return {
       brandName: "",
-      fragranceFamily: "",
-      gender: "",
+      category: "",
+      type: "",
       size: "",
       sellingPrice: "",
       costPrice: "",
@@ -626,8 +639,8 @@ export default {
         description: '',
         reference: '',
         productInventory: '',
-        fragranceFamily: "",
-        gender: "",
+        category: "",
+        type: "",
         size: "",
         // other fields
       },
@@ -666,10 +679,10 @@ export default {
         filteredProductList() {
             let filtered = this.products;
 
-            if (this.selectedCategory === 'gender' && this.selectedSubCategory) {
-                filtered = filtered.filter(product => product.gender === this.selectedSubCategory);
-            } else if (this.selectedCategory === 'fragrance' && this.selectedSubCategory) {
-                filtered = filtered.filter(product => product.fragranceFamily === this.selectedSubCategory);
+            if (this.selectedCategory === 'type' && this.selectedSubCategory) {
+                filtered = filtered.filter(product => product.type === this.selectedSubCategory);
+            } else if (this.selectedCategory === 'category' && this.selectedSubCategory) {
+                filtered = filtered.filter(product => product.category === this.selectedSubCategory);
             }
 
             if (this.searchReference) {
@@ -735,8 +748,8 @@ export default {
                 const db = await openDB();
                 const newProduct = {
                 brandName: this.brandName,
-                fragranceFamily: this.fragranceFamily,
-                gender: this.gender,
+                category: this.category,
+                type: this.type,
                 size: this.size,
                 sellingPrice: this.sellingPrice,
                 costPrice: this.costPrice,
@@ -822,8 +835,8 @@ export default {
         // Prepare data for Excel
         const worksheetData = this.products.map((product) => ({
             BrandName: product.brandName,
-            FragranceFamily: product.fragranceFamily,
-            Gender: product.gender,
+            Category: product.category,
+            Type: product.type,
             Size: product.size,
             Selling_Price: product.sellingPrice,
             Cost_Price: product.costPrice,
@@ -843,8 +856,8 @@ export default {
 
         resetForm() {
             this.brandName = "";
-            this.fragranceFamily = "";
-            this.gender = "";
+            this.category = "";
+            this.type = "";
             this.size = "";
             this.sellingPrice = "";
             this.costPrice = "";
@@ -1260,6 +1273,10 @@ export default {
     .sparkline {
         width: 100%;
         height: 100%;
+    }
+
+    li{
+        cursor: pointer;
     }
 
 </style>

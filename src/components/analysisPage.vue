@@ -170,11 +170,11 @@ export default defineComponent({
 
 
   mounted() {
-    let userLogin = localStorage.getItem('name');
-        if (!userLogin) {
-            this.$router.push({ name: 'login' });
-        } 
-  },
+  let userLogin = localStorage.getItem('name');
+  if (userLogin !== 'Admin') { // Use strict inequality
+    this.$router.push({ name: 'login' }); // Redirect to login if not Admin
+  }
+},
 
 
   setup() {

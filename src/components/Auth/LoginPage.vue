@@ -73,9 +73,11 @@ export default {
         );
 
         if (response.data.access_token) {
+          
           const name = response.data.user.name;
           localStorage.setItem("authToken", response.data.access_token);
           localStorage.setItem("name", name);
+
           window.location.replace("/");
         } else {
           this.errorMessage =
