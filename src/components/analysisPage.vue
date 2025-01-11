@@ -51,10 +51,10 @@
             <li class="ms-3 cursor-pointer" @click="filterCategory('all')">
               <span>All</span>
             </li>
-            <li class="cursor-pointer" @click="filterCategory('fragrance')">
+            <li class="cursor-pointer" @click="filterCategory('category')">
               <span>Fragrance Family</span>
             </li>
-            <li class="cursor-pointer" @click="filterCategory('gender')">
+            <li class="cursor-pointer" @click="filterCategory('type')">
               <span>Gender</span>
             </li>
           </ul>
@@ -62,29 +62,27 @@
           <hr>
 
           <!-- Subcategory Filter for Fragrance -->
-          <div class="mt-4" v-if="selectedCategory === 'fragrance'">
+          <div class="mt-4" v-if="selectedCategory === 'category'">
             <ul class="table-list2">
-              <li class="ms-4" @click="filterSubCategory('woody')">
-                <span>Woody</span>
-              </li>
-              <li class="ms-3" @click="filterSubCategory('floral')">
-                <span>Floral</span>
-              </li>
-              <li class="ms-3" @click="filterSubCategory('seduction')">
-                <span>Seduction</span>
-              </li>
+                
+                <li class="ms-4" @click="filterSubCategory('rollon')"><span>Rollon</span></li>
+                <li class="ms-3" @click="filterSubCategory('airfreshness')"><span>Airfreshness</span></li>
+                <li class="ms-3" @click="filterSubCategory('bodysplash')"><span>Bodysplash</span></li>
+                <li class="ms-3" @click="filterSubCategory('deodorantspray')"><span>deodorantspray</span></li>
+                <li class="ms-3" @click="filterSubCategory('bodymist')"><span>Bodymist</span></li>
+                <li class="ms-3" @click="filterSubCategory('roomdiffusers')"><span>Roomdiffusers</span></li>
+                <li class="ms-3" @click="filterSubCategory('perfume')"><span>Perfume</span></li>
+
+
             </ul>
+
           </div>
 
           <!-- Subcategory Filter for Gender -->
-          <div class="mt-4" v-if="selectedCategory === 'gender'">
+          <div class="mt-4" v-if="selectedCategory === 'type'">
             <ul class="table-list2">
-              <li class="ms-4" @click="filterSubCategory('male')">
-                <span>Male</span>
-              </li>
-              <li class="ms-3" @click="filterSubCategory('female')">
-                <span>Female</span>
-              </li>
+                <li class="ms-4" @click="filterSubCategory('regular')"><span>Regular</span></li>
+                <li class="ms-3" @click="filterSubCategory('designers')"><span>Designers</span></li>
             </ul>
           </div>
 
@@ -243,12 +241,12 @@ export default defineComponent({
       if (selectedCategory.value === 'all') return products.value;
 
       return products.value.filter((product) => {
-        if (selectedCategory.value === 'gender' && selectedSubCategory.value) {
-          return product.gender === selectedSubCategory.value;
+        if (selectedCategory.value === 'type' && selectedSubCategory.value) {
+          return product.type === selectedSubCategory.value;
         }
 
-        if (selectedCategory.value === 'fragrance' && selectedSubCategory.value) {
-          return product.fragranceFamily === selectedSubCategory.value;
+        if (selectedCategory.value === 'category' && selectedSubCategory.value) {
+          return product.category === selectedSubCategory.value;
         }
 
         return true;
