@@ -52,10 +52,10 @@
               <span>All</span>
             </li>
             <li class="cursor-pointer" @click="filterCategory('category')">
-              <span>Fragrance Family</span>
+              <span>Category</span>
             </li>
             <li class="cursor-pointer" @click="filterCategory('type')">
-              <span>Gender</span>
+              <span>Type</span>
             </li>
           </ul>
 
