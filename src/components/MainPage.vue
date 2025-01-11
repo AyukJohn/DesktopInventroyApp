@@ -62,7 +62,7 @@
                     </th>
 
                     <th scope="col">
-                        <span>Statu</span>
+                        <span>Status</span>
                         <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
                     </th>
 
