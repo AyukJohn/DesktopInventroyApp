@@ -189,7 +189,7 @@
                                     </span>
                                     <span>
                                         <h6>Unit Price</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" required>
+                                        <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" required readonly>
                                     </span>
                                     <span>
                                         <h6>Quantity</h6>
@@ -285,11 +285,11 @@
                                     
                                     <span>
                                         <h6>Item</h6>
-                                        <input type="text" class="form-control" placeholder="ITEM(size)" v-model="item" style="width: 200px;" required>
+                                        <input type="text" class="form-control" @input="fetchUnitPrice"  placeholder="ITEM(size)" v-model="item" style="width: 200px;" required>
                                     </span>
                                     <span>
                                         <h6>Unit Price</h6>
-                                        <input type="text" class="form-control" v-model="unit_price" style="width: 200px;" required>
+                                        <input type="text" class="form-control" v-model="unit_price" style="width: 200px;" required readonly>
                                     </span>
                                     <span>
                                         <h6>Quantity</h6>
@@ -574,6 +574,7 @@ export default defineComponent({
       if (bestSellingProduct.value && leastSellingProduct.value) {
         initializeCharts();
       }
+
     });
 
     return {
@@ -624,31 +625,22 @@ export default defineComponent({
       this.amount = this.unit_price * this.quantity;
     },
 
-    // async saveProductSales(status) {
-    //   const referenceNumber = `FB${Math.floor(100000000 + Math.random() * 900000000)}`;
-    //   const transactionNumber = `#${Math.floor(100000000 + Math.random() * 900000000)}`;
 
-    //   try {
-    //     const db = await openSalesDB();
-    //     const newSale = {
-    //       item: this.item,
-    //       unit_price: this.unit_price,
-    //       quantity: this.quantity,
-    //       amount: this.amount,
-    //       reference: referenceNumber,
-    //       transactionNumber: transactionNumber,
-    //       status: status,
-    //       created_at: new Date().toLocaleString(),
-    //     };
-    //     await addSale(db, newSale);
-    //     alert('Sale added successfully');
-    //     window.location.reload();
-    //   } catch (error) {
-    //     console.error('Error adding sale:', error);
-    //     alert('Failed to add sale');
-    //   }
-    // },
+    async fetchUnitPrice() {
+      try {
+        const db = await openDB();
+        const products = await getAllProducts(db);
 
+        const product = products.find(p => p.brandName === this.item);
+
+      // console.log(product.sellingPrice);
+        this.unit_price = product.sellingPrice;
+
+
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+      }
+    },
 
 
 
@@ -668,11 +660,10 @@ export default defineComponent({
           status: status,
           created_at: new Date().toLocaleString(),
         };
-        await addSale(db, newSale);
-        alert('Sale added successfully');
+      
 
         // Update the product inventory if status is 'Completed'
-        if (status === 'Completed') {
+        // if (status === 'Completed') {
           const productsDB = await openDB();
           const products = await getAllProducts(productsDB);
 
@@ -690,19 +681,27 @@ export default defineComponent({
               if (newInventory < 0) {
                 alert(`Insufficient inventory for product: ${productName}`);
               } else {
-                // Update the product's inventory
-                product.productInventory = newInventory;
+
+                await addSale(db, newSale);
+                alert('Sale added successfully');
+
+                if (status === 'Completed') {
+                  // Update the product's inventory
+                  product.productInventory = newInventory;
+    
+               
   
-                // Save the updated product to the database
-                await updateProduct(productsDB, product);
-                alert(`Inventory updated for product: ${productName}`);
+                  await updateProduct(productsDB, product);
+                  alert(`Inventory updated for product: ${productName}`);
+                }
+
               }
             } else {
               alert(`Product not found: ${productName}`);
             }
 
 
-        }
+        
 
         window.location.reload();
       } catch (error) {
@@ -758,22 +757,6 @@ export default defineComponent({
       this.selectedSale = sale;
     },
 
-    // async updateStatus(status) {
-    //   try {
-    //     const db = await openSalesDB();
-    //     const updatedSale = {
-    //       ...this.selectedSale,
-    //       status: status
-    //     };
-    //     await updateSale(db, updatedSale);
-    //     alert(`Sale status updated to ${status}`);
-    //     this.loadSales();
-    //     window.location.reload();
-    //   } catch (error) {
-    //     console.error('Error updating sale status:', error);
-    //     alert('Failed to update sale status');
-    //   }
-    // },
 
 
 
@@ -784,8 +767,6 @@ export default defineComponent({
           ...this.selectedSale,
           status: status,
         };
-        await updateSale(db, updatedSale);
-        alert(`Sale status updated to ${status}`);
 
         if (status === 'Completed') {
           const productsDB = await openDB();
@@ -809,12 +790,20 @@ export default defineComponent({
               if (newInventory < 0) {
                 alert(`Insufficient inventory for product: ${productName}`);
               } else {
-                // Update the product's inventory
-                product.productInventory = newInventory;
-  
-                // Save the updated product to the database
-                await updateProduct(productsDB, product);
-                alert(`Inventory updated for product: ${productName}`);
+
+                await updateSale(db, updatedSale);
+                alert(`Sale status updated to ${status}`);
+
+                if (status === 'Completed') {
+                  // Update the product's inventory
+                  product.productInventory = newInventory;
+    
+                  // Save the updated product to the database
+                  await updateProduct(productsDB, product);
+                  alert(`Inventory updated for product: ${productName}`);
+                  
+                }
+
               }
             } else {
               alert(`Product not found: ${productName}`);

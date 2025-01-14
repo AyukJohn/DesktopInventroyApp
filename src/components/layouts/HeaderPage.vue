@@ -9,9 +9,15 @@
       </button>
       <div class="collapse navbar-collapse" id="collapsibleNavId">
         <ul class="navbar-nav mt-2 mt-lg-0">
+          
           <router-link to="/" class="nav-link ms-3">
             <span><img src="/tabler_smart-home.svg" alt="" /></span>
             <span class="pt-1 ps-2">Home</span>
+          </router-link>
+
+          <router-link to="/wholeandretail" class="nav-link ms-2">
+            <span><img src="/material-symbols_add-business-outline-rounded.svg" alt="" /></span>
+            <span class="pt-1 ps-2">WholeAndRetail</span>
           </router-link>
 
           <router-link to="/inventory" class="nav-link ms-2">
@@ -29,18 +35,19 @@
             <span class="pt-1 ps-2">Analytics</span>
           </router-link>
 
-          <div class="input-container ms-5">
+
+          <!-- <div class="input-container ms-5">
             <img src="/tabler_search.svg" alt="" />
             <input type="text" placeholder="Quick action..." class="input1" />
-          </div>
+          </div> -->
 
-          <span class="ms-3">
+          <span class="ms-5">
             <img src="/notify.svg" alt="" />
           </span>
           
 
           <!-- Dropdown button for name and logout -->
-          <div class="dropdown ms-3">
+          <div class="dropdown ms-5">
             <button class="btn1" @click="toggleDropdown">
               <span>{{ name }}</span>
               <span><img src="/tabler_user-filled.svg" alt="" /></span>
@@ -180,5 +187,10 @@ export default {
 .logout-btn:hover {
   background-color: darkred;
 }
+
+/* span{
+  font-size: x-small;
+} */
+
 </style>
 

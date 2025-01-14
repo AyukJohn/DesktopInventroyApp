@@ -3,10 +3,11 @@ import MainPage from "../components/MainPage.vue";
 import InventoryPage from "@/components/InventoryPage.vue";
 import SalesManagentPage from "@/components/SalesManagentPage.vue";
 import OrderInformation from "@/components/OrderInformation.vue";
-import CustomerPage from "@/components/CustomerPage.vue";
+import CustomerPage from "@/components/WholeandRetailPage.vue";
 import AnalysisPage from "@/components/analysisPage.vue";
 import LoginPage from "@/components/Auth/LoginPage.vue";
 import RegisterPage from "@/components/Auth/RegisterPage.vue";
+import WholeandRetailPage from "@/components/WholeandRetailPage.vue";
 
 
 
@@ -52,6 +53,13 @@ const routes = [
     path: "/analytics",
     name: 'analytics',
     component: AnalysisPage,
+
+  },
+
+  {
+    path: "/wholeandretail",
+    name: 'wholeandretail',
+    component: WholeandRetailPage,
 
   },
 
