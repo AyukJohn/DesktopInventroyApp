@@ -40,6 +40,7 @@ export function getAllProducts(db) {
         const request = store.getAll();
 
         request.onsuccess = () => resolve(request.result);
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
