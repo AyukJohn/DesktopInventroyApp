@@ -9,7 +9,6 @@
       </button>
       <div class="collapse navbar-collapse" id="collapsibleNavId">
         <ul class="navbar-nav mt-2 mt-lg-0">
-          
           <router-link to="/" class="nav-link ms-3">
             <span><img src="/tabler_smart-home.svg" alt="" /></span>
             <span class="pt-1 ps-2">Home</span>
@@ -17,7 +16,7 @@
 
           <router-link to="/wholeandretail" class="nav-link ms-2">
             <span><img src="/material-symbols_add-business-outline-rounded.svg" alt="" /></span>
-            <span class="pt-1 ps-2">WholeAndRetail</span>
+            <span class="pt-1 ps-2">WholeSale</span>
           </router-link>
 
           <router-link to="/inventory" class="nav-link ms-2">
@@ -30,21 +29,14 @@
             <span class="pt-1 ps-2">Sales and Orders</span>
           </router-link>
 
-          <router-link v-if="name === 'Admin'"  to="/analytics" class="nav-link ms-2">
+          <router-link v-if="name === 'Admin'" to="/analytics" class="nav-link ms-2">
             <span><img src="/chart-bar-line.svg" alt="" /></span>
             <span class="pt-1 ps-2">Analytics</span>
           </router-link>
 
-
-          <!-- <div class="input-container ms-5">
-            <img src="/tabler_search.svg" alt="" />
-            <input type="text" placeholder="Quick action..." class="input1" />
-          </div> -->
-
           <span class="ms-5">
             <img src="/notify.svg" alt="" />
           </span>
-          
 
           <!-- Dropdown button for name and logout -->
           <div class="dropdown ms-5">
@@ -52,23 +44,31 @@
               <span>{{ name }}</span>
               <span><img src="/tabler_user-filled.svg" alt="" /></span>
             </button>
+
             <div v-if="isDropdownVisible" class="dropdown-menu">
-              <p>{{ name }}</p>
-              <button @click="logout" class="logout-btn">Logout</button>
+              <button @click="logout" class="btn btn-sm logout-btn me-5">Log out</button>
+              <button id="uploadDataButton" class="btn btn-sm logout-btn me-5" @click="uploadDataToServer" v-if="name === 'Admin'">Upload Data</button>
             </div>
+
           </div>
         </ul>
       </div>
     </nav>
+    
+    <!-- <div class="upload-container mt-4" v-if="name === 'Admin'">
+      <button id="uploadDataButton" class="btn btn-primary" @click="uploadDataToServer">
+        Upload Data
+      </button>
+    </div> -->
   </div>
 </template>
 
-
-
-
-
-
 <script>
+import { openSalesDB, getAllSales } from '../../utils/salesDB';
+import { openDB, getAllProducts } from '../../utils/indexDB';
+import { openSupplierDB, getAllSuppliers } from '../../utils/supplierDB';
+
+
 export default {
   data() {
     return {
@@ -87,14 +87,9 @@ export default {
     if (storedNotification) {
       this.notificationMessage = storedNotification;
       console.log("Notification message:", this.notificationMessage);
-      
     }
-
-    console.log('hi');
-    
   },
 
-  
   methods: {
     // Toggle dropdown visibility
     toggleDropdown() {
@@ -106,9 +101,113 @@ export default {
       this.name = null;  // Clear the name in component's data
       this.$router.push("/login");
     },
+
+    // Function to fetch data from IndexedDB
+    async fetchDataFromIndexedDB() {
+      try {
+        const productsDB = await openDB();
+        const products = await getAllProducts(productsDB).then((data) =>
+          data.map((product) => ({
+            type: "product",
+            brandName: product.brandName,
+            category: product.category,
+            costPrice: product.costPrice,
+            sellingPrice: product.sellingPrice,
+            description:  product.description,
+            productInventory:  product.productInventory,
+            reference:  product.reference,
+            size:  product.size,
+          }))
+        );
+
+        const salesDB = await openSalesDB();
+        
+        
+        // const sales = await getAllSales(salesDB).then((data) =>
+        //   data.map((sale) => ({
+        //     type: "sale",
+        //     item: sale.item,
+        //     unit_price: sale.unit_price,
+        //     quantity: sale.quantity,
+        //     amount: sale.amount,
+        //     transactionNumber: sale.transactionNumber,
+        //     status: sale.status,
+        //   }))
+        // );
+
+        console.log(getAllSales(salesDB));
+        
+        const sales = await getAllSales(salesDB).then((data) =>
+        data.flatMap((transaction) => 
+          transaction.items.map((saleItem) => ({
+            type: "sale",
+            item: saleItem.item,
+            unit_price: saleItem.unit_price,
+            quantity: saleItem.quantity,
+            amount: saleItem.amount,
+            transactionNumber: transaction.transactionNumber,
+            status: transaction.status,
+          }))
+        )
+);
+
+        const supplierDB = await openSupplierDB();
+        const suppliers = await getAllSuppliers(supplierDB).then((data) =>
+          data.map((supplier) => ({
+            type: "supplier",
+            supplierName: supplier.name,
+            phoneNumber: supplier.phoneNumber,
+            address: supplier.location,
+            supplyCount: supplier.supplyCount,
+          }))
+        );
+
+        // Combine all data
+        return [...products, ...sales, ...suppliers];
+      } catch (error) {
+        console.error("Error fetching data from IndexedDB:", error);
+        throw error;
+      }
+    },
+
+    // Function to upload data to the server
+    async uploadDataToServer() {
+      try {
+        const combinedData = await this.fetchDataFromIndexedDB();
+
+        console.log(combinedData);
+        
+
+        // Send data to Laravel API
+
+        const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/store', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ uploads: combinedData }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("Data uploaded successfully:", result);
+          alert('Data uploaded successfully!')
+        } else {
+          console.error("Failed to upload data:", response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error("Error uploading data to server:", error);
+      }
+    },
   },
 };
 </script>
+
+<style scoped>
+/* Add your styles here */
+</style>
+
 
 
 
@@ -176,17 +275,18 @@ export default {
 }
 
 .logout-btn {
-  background-color: red;
-  color: white;
-  border: none;
-  padding: 5px 10px;
+  color: #000;
+  border: 1px solid #67626266;
+  /* padding: 5px; */
   cursor: pointer;
   margin-top: 10px;
+  border-radius: 10px;
+  width: 10vw;
 }
 
-.logout-btn:hover {
+/* .logout-btn:hover {
   background-color: darkred;
-}
+} */
 
 /* span{
   font-size: x-small;

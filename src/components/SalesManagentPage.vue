@@ -24,7 +24,7 @@
 
             <div>
                 <span><img src="/PointOfSales.svg" alt="" data-bs-toggle="modal" data-bs-target="#posModal" style="cursor: pointer;"></span>
-                <span v-if="isAdmin"  class="ms-3"><img src="/SaleReport.svg" alt="" style="cursor: pointer;"  data-bs-toggle="modal" data-bs-target="#salesreportModal"></span>
+                <!-- <span v-if="isAdmin"  class="ms-3"><img src="/SaleReport.svg" alt="" style="cursor: pointer;"  data-bs-toggle="modal" data-bs-target="#salesreportModal"></span> -->
             </div>
 
         </div>
@@ -103,7 +103,12 @@
                     </td>
                     <td>{{ sale.created_at }}</td>
                     <!-- <td></td> -->
-                    <td>{{ sale.amount }}</td>
+                   <!-- Replace existing amount cell -->
+                    <td>
+                      {{ sale.totalAmount || sale.amount || 
+                        (sale.items ? sale.items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2) : '0.00') }}
+                    </td>
+
                     <td>{{ sale.transactionNumber }}</td>
                     <td class="ms-5 pt-4">
                         <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span>
@@ -164,7 +169,7 @@
 
 
                 <div class="mainrapperx container mb-5 mt-4" style="height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
-                    <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh; border-radius: 20px;"> 
+                    <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh; overflow-y: auto; border-radius: 20px;"> 
                         
                         <div class="text-dark d-flex justify-content-between" >
                             <div>
@@ -175,44 +180,71 @@
                                 <img src="/cleall.svg" alt="">
                             </div>
                         </div>
-                        <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="height: 38vh; border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
+                        <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="min-height: 58vh; border-radius: 20px; display: flex; flex-direction: column;"><!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->
                         
                             <form @submit.prevent="saveProductSales">
-
-                                <!-- Input Section -->
-                                <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
-                                    
-                                    <span>
-                                        <h6>Item</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Unit Price</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" required readonly>
-                                    </span>
-                                    <span>
-                                        <h6>Quantity</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Amount</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly>
-                                    </span>
-
-                                   
-                                
-                                    <!-- <img src="/deleteicon.svg" alt="Delete" style="height: 30px; cursor: pointer;"> -->
+                              <!-- Transaction Info -->
+                              <div class="row mb-3">
+                                <div class="col-md-6">
+                                  <p><strong>Reference:</strong> {{ selectedSale.reference }}</p>
+                                  <p><strong>Transaction:</strong> {{ selectedSale.transactionNumber }}</p>
                                 </div>
-
-                                <!-- Footer Section -->
-        
-                                
-                                <div class="text-dark" style="margin-left: 80%; margin-top: 8%;">
-                                    <div>Total: {{ selectedSale.amount }}</div>
+                                <div class="col-md-6 text-end">
+                                  <p><strong>Date:</strong> {{ selectedSale.created_at }}</p>
+                                  <p><strong>Status:</strong> {{ selectedSale.status }}</p>
                                 </div>
-                                
-                            </form>    
+                              </div>
+
+                              <!-- Single Item Display -->
+                              <div v-if="!selectedSale.items" class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+                                <span>
+                                  <h6>Item</h6>
+                                  <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" readonly>
+                                </span>
+                                <span>
+                                  <h6>Unit Price</h6>
+                                  <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" readonly>
+                                </span>
+                                <span>
+                                  <h6>Quantity</h6>
+                                  <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" readonly>
+                                </span>
+                                <span>
+                                  <h6>Amount</h6>
+                                  <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly>
+                                </span>
+                              </div>
+
+                              <!-- Multiple Items Display -->
+                              <div v-else>
+                                <div v-for="(item, index) in selectedSale.items" :key="index" 
+                                    class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+                                  <span>
+                                    <h6>Item {{ index + 1 }}</h6>
+                                    <input type="text" class="form-control" v-model="item.item" style="width: 200px;" readonly>
+                                  </span>
+                                  <span>
+                                    <h6>Unit Price</h6>
+                                    <input type="text" class="form-control" v-model="item.unit_price" style="width: 200px;" readonly>
+                                  </span>
+                                  <span>
+                                    <h6>Quantity</h6>
+                                    <input type="text" class="form-control" v-model="item.quantity" style="width: 200px;" readonly>
+                                  </span>
+                                  <span>
+                                    <h6>Amount</h6>
+                                    <input type="text" class="form-control" v-model="item.amount" style="width: 200px;" readonly>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <!-- Total Amount -->
+                              <div class="text-dark text-end mt-4">
+                                <h5>Total Amount: {{ selectedSale.totalAmount || selectedSale.amount }}</h5>
+                              </div>
+                            </form>
+
                         </div>
                         <!-- <img src="/cancelTransaction.svg" alt=""> -->
                         
@@ -263,8 +295,8 @@
 
 
 
-                <div class="mainrapperx container mb-5 mt-4" style="height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
-                    <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh; border-radius: 20px;"> 
+                <div class="mainrapperx container mb-5 mt-4" style="min-height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
+                    <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh;  overflow-y: auto; border-radius: 20px;"> 
                         
                         <div class="text-dark d-flex justify-content-between" >
                             <div>
@@ -275,41 +307,51 @@
                                 <img src="/cleall.svg" alt="">
                             </div>
                         </div>
-                        <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="height: 38vh; border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
+                        <div class="wrapper viewsalewrapper text-danger p-4 rounded"   style="max-height: 60vh;  border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->
                         
+                        
+
                             <form @submit.prevent="saveProductSales">
-
-                                <!-- Input Section -->
-                                <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
-                                    
-                                    <span>
-                                        <h6>Item</h6>
-                                        <input type="text" class="form-control" @input="fetchUnitPrice"  placeholder="ITEM(size)" v-model="item" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Unit Price</h6>
-                                        <input type="text" class="form-control" v-model="unit_price" style="width: 200px;" required readonly>
-                                    </span>
-                                    <span>
-                                        <h6>Quantity</h6>
-                                        <input type="text" class="form-control" v-model="quantity" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Amount</h6>
-                                        <input type="text" class="form-control" v-model="amount" style="width: 200px;" readonly>
-                                    </span>
-
+                              <!-- Iterate over items array -->
+                              <div v-for="(item, index) in items" :key="index" class="item-group mb-4">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                                  <span>
+                                    <h6>Item</h6>
+                                    <input type="text" class="form-control" @input="fetchUnitPrice(index)" 
+                                          v-model="item.item" placeholder="ITEM(size)" style="width: 200px;" required>
+                                  </span>
+                                  <span>
+                                    <h6>Unit Price</h6>
+                                    <input type="text" class="form-control" v-model="item.unit_price" 
+                                          style="width: 200px;" required readonly>
+                                  </span>
+                                  <span>
+                                    <h6>Quantity</h6>
+                                    <input type="text" class="form-control" v-model="item.quantity" 
+                                          @input="calculateAmount(index)" style="width: 200px;" required>
+                                  </span>
+                                  <span>
+                                    <h6>Amount</h6>
+                                    <input type="text" class="form-control" v-model="item.amount" 
+                                          style="width: 200px;" readonly>
+                                  </span>
+                                  <button type="button" class="btn btn-danger" @click="removeItem(index)" 
+                                          v-if="items.length > 1">Remove</button>
                                 </div>
+                              </div>
 
-                                <!-- Footer Section -->
-        
-                                
-                                <div class="text-dark" style="margin-left: 80%; margin-top: 8%;">
-                                    <div>Total: {{ amount }}</div>
-                                </div>
-                                
-                            </form>    
+                              <div class="d-flex gap-3 mt-3">
+                                <button type="button" class="btn btn-secondary" @click="addNewItem">
+                                  Add More Items
+                                </button>
+                              </div>
+
+                              <div class="text-dark text-end mt-4">
+                                <h5>Total Amount: {{ calculateTotal }}</h5>
+                              </div>
+                            </form>
+
                         </div>
                         <!-- <img src="/cancelTransaction.svg" alt=""> -->
                         
@@ -326,10 +368,7 @@
                        
                     </div>
                 </div>
-                            
-               
-                            
-
+   
             </div>
         </div>
     </div>
@@ -474,6 +513,13 @@ export default defineComponent({
       selectedSale: {},
       searchTransactionNumber: "",
       isAdmin: false,
+
+       items: [{
+        name: '',
+        unitPrice: '',
+        quantity: '',
+        amount: ''
+    }]
     };
   },
 
@@ -482,89 +528,124 @@ export default defineComponent({
     const leastSellingProduct = ref(null);
     const revenue = ref(null);
     const hasData = ref(false);
-    const salesData = ref([]);
 
-
-    
 
     
     const fetchData = async () => {
-      try {
-        const db = await openSalesDB();
-        const sales = await getAllSales(db);
+  try {
+    const db = await openSalesDB();
+    const sales = await getAllSales(db);
+    
+    // Initialize default values
+    hasData.value = false;
+    const salesData = ref([]);
+    const bestSellingProduct = ref(null);
+    const leastSellingProduct = ref(null);
+    leastSellingProduct.value = null;
+    revenue.value = '0.00';
 
-        if (sales.length > 0) {
-          hasData.value = true;
-          salesData.value = sales;
+    // Validate sales data
+    if (Array.isArray(sales) && sales.length > 0) {
+      hasData.value = true;
+      salesData.value = sales;
 
-          const productSales = sales.reduce((acc, sale) => {
-            acc[sale.item] = (acc[sale.item] || 0) + sale.amount;
-            return acc;
-          }, {});
+      const productSales = {};
+      let totalSales = 0;
 
-          const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
-          bestSellingProduct.value = {
-            name: sortedProducts[sortedProducts.length - 1][0],
-            percentage: ((sortedProducts[sortedProducts.length - 1][1] / sales.reduce((acc, sale) => acc + sale.amount, 0)) * 100).toFixed(2)
-          };
-          leastSellingProduct.value = {
-            name: sortedProducts[0][0],
-            percentage: ((sortedProducts[0][1] / sales.reduce((acc, sale) => acc + sale.amount, 0)) * 100).toFixed(2)
-          };
-          revenue.value = sales.reduce((acc, sale) => acc + sale.amount, 0).toFixed(2);
-        } else {
-          hasData.value = false;
-        }
-      } catch (error) {
-        console.error('Error fetching sales data:', error);
-      }
-    };
+      // Safe iteration over sales
+      sales.forEach(sale => {
+        // Verify sale has items array
+        if (sale?.status === 'Completed' && Array.isArray(sale?.items)) {
+          sale.items.forEach(item => {
+            if (item?.item) { // Verify item exists and has name
+              const itemName = item.item;
+              const itemAmount = parseFloat(item.amount) || 0;
+              const itemQuantity = parseInt(item.quantity) || 0;
 
-    const initializeCharts = () => {
-      nextTick(() => {
-        const months = moment.months();
-        const salesByMonth = months.reduce((acc, month) => {
-          acc[month] = 0;
-          return acc;
-        }, {});
+              productSales[itemName] = productSales[itemName] || {
+                amount: 0,
+                quantity: 0
+              };
 
-        salesData.value.forEach(sale => {
-          const month = moment(sale.created_at, 'YYYY-MM-DD HH:mm:ss').format('MMMM');
-          salesByMonth[month] += sale.amount;
-        });
-
-        const salesAmounts = months.map(month => salesByMonth[month]);
-
-        const ctxSalesChart = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctxSalesChart, {
-          type: 'bar',
-          data: {
-            labels: months,
-            datasets: [{
-              data: salesAmounts,
-              backgroundColor: 'rgba(68, 155, 82, 1)',
-              borderWidth: 1,
-              borderRadius: 15,
-              barThickness: 13
-            }]
-          },
-          options: {
-            scales: {
-              x: {
-                grid: {
-                  display: false
-                }
-              },
-              y: {
-                grid: {
-                  display: false
-                }
-              }
+              productSales[itemName].amount += itemAmount;
+              productSales[itemName].quantity += itemQuantity;
+              totalSales += itemAmount;
             }
-          }
-        });
+          });
+        }
       });
+
+      const sortedProducts = Object.entries(productSales);
+      if (sortedProducts.length > 0) {
+        sortedProducts.sort((a, b) => b[1].quantity - a[1].quantity);
+        
+        bestSellingProduct.value = {
+          name: sortedProducts[0][0],
+          quantity: sortedProducts[0][1].quantity,
+          percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
+        };
+
+        leastSellingProduct.value = {
+          name: sortedProducts[sortedProducts.length - 1][0],
+          quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
+          percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
+        };
+
+        revenue.value = totalSales.toFixed(2);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching sales data:', error);
+  }
+};
+    
+
+    const initializeCharts = (sales) => {
+
+  nextTick(() => {
+    const months = moment.months();
+    const salesByMonth = months.reduce((acc, month) => {
+      acc[month] = 0;
+      return acc;
+    }, {});
+
+    // Process grouped sales data for chart
+    sales.forEach(sale => {
+      if (sale.status === 'Completed' && sale.items) {
+        const month = moment(sale.created_at, 'DD/MM/YYYY, HH:mm:ss').format('MMMM');
+        const totalAmount = sale.items.reduce((sum, item) => 
+          sum + parseFloat(item.amount || 0), 0
+        );
+        salesByMonth[month] += totalAmount;
+      }
+    });
+
+    const ctx = document.getElementById('salesChart');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Monthly Sales',
+          data: months.map(month => salesByMonth[month]),
+          backgroundColor: 'rgba(68, 155, 82, 1)',
+          borderWidth: 1,
+          borderRadius: 15,
+          barThickness: 13
+        }]
+      },
+      options: {
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  });
+
+
     };
+    
 
     onMounted(() => {
       fetchData();
@@ -605,6 +686,24 @@ export default defineComponent({
   },
 
   computed: {
+
+    getSaleAmount(sale) {
+    if (sale.totalAmount) return sale.totalAmount;
+    if (sale.amount) return sale.amount;
+    if (sale.items) {
+      return sale.items.reduce((sum, item) => 
+        sum + parseFloat(item.amount), 0
+      ).toFixed(2);
+    }
+    return '0.00';
+  },
+
+    calculateTotal() {
+      return this.items.reduce((total, item) => {
+        return total + (parseFloat(item.amount) || 0)
+      }, 0).toFixed(2)
+    },
+
     sortedSales() {
       return this.filteredSales.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
@@ -621,94 +720,116 @@ export default defineComponent({
   },
 
   methods: {
-    calculateAmount() {
-      this.amount = this.unit_price * this.quantity;
+
+    addNewItem() {
+      this.items.push({
+        item: '',
+        unit_price: '',
+        quantity: '',
+        amount: ''
+      })
     },
 
-
-    async fetchUnitPrice() {
-      try {
-        const db = await openDB();
-        const products = await getAllProducts(db);
-
-        const product = products.find(p => p.brandName === this.item);
-
-      // console.log(product.sellingPrice);
-        this.unit_price = product.sellingPrice;
-
-
-      } catch (error) {
-        console.error("Error fetching product details:", error);
+    removeItem(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1)
       }
     },
 
 
 
-    async saveProductSales(status) {
-      const referenceNumber = `FB${Math.floor(100000000 + Math.random() * 900000000)}`;
-      const transactionNumber = `#${Math.floor(100000000 + Math.random() * 900000000)}`;
+    calculateAmount(index) {
+      const item = this.items[index]
+      item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
+    },
 
+
+    async fetchUnitPrice(index) {
       try {
-        const db = await openSalesDB();
-        const newSale = {
-          item: this.item,
-          unit_price: this.unit_price,
-          quantity: this.quantity,
-          amount: this.amount,
-          reference: referenceNumber,
-          transactionNumber: transactionNumber,
-          status: status,
-          created_at: new Date().toLocaleString(),
-        };
-      
+        const db = await openDB()
+        const products = await getAllProducts(db)
 
-        // Update the product inventory if status is 'Completed'
-        // if (status === 'Completed') {
-          const productsDB = await openDB();
-          const products = await getAllProducts(productsDB);
-
-          // Find the product by name
-          const productName = this.item;
-          const product = products.find(p => p.brandName === productName);
-
-          console.log(product.productInventory);
-
-            if (product) {
-              // Subtract the quantity sold from product inventory
-              const newInventory = product.productInventory - this.quantity;
-  
-              // Ensure inventory is not negative
-              if (newInventory < 0) {
-                alert(`Insufficient inventory for product: ${productName}`);
-              } else {
-
-                await addSale(db, newSale);
-                alert('Sale added successfully');
-
-                if (status === 'Completed') {
-                  // Update the product's inventory
-                  product.productInventory = newInventory;
-    
-               
-  
-                  await updateProduct(productsDB, product);
-                  alert(`Inventory updated for product: ${productName}`);
-                }
-
-              }
-            } else {
-              alert(`Product not found: ${productName}`);
-            }
-
+        const product = products.find(p => p.brandName === this.items[index].item)
 
         
-
-        window.location.reload();
+        if (product) {
+          this.items[index].unit_price = product.sellingPrice
+          this.calculateAmount(index)
+        }
       } catch (error) {
-        console.error('Error adding sale:', error);
-        alert('Failed to add sale');
+        console.error('Error fetching unit price:', error)
       }
     },
+
+
+
+    async saveProductSales(status){
+
+  try {
+    const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
+    const transactionNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
+    const salesDB = await openSalesDB();
+    const productDB = await openDB();
+
+    // Calculate total amount for all items
+    const totalAmount = this.items.reduce((sum, item) => 
+      sum + parseFloat(item.amount || 0), 0
+    ).toFixed(2);
+
+    // Create grouped sale record
+    const groupedSale = {
+      reference: referenceNumber,
+      transactionNumber: transactionNumber,
+      status: status,
+      created_at: new Date().toLocaleString(),
+      totalAmount: totalAmount,
+      items: this.items.map(item => ({
+        item: item.item,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        amount: item.amount
+      }))
+    };
+
+    console.log(groupedSale);
+    
+
+    // Update inventory for all items if status is Completed
+    if (status === 'Completed') {
+      const products = await getAllProducts(productDB);
+      
+      for (const item of this.items) {
+        const product = products.find(p => p.brandName === item.item);
+        if (product) {
+          const newQuantity = product.productInventory - parseInt(item.quantity);
+          if (newQuantity < 0) {
+            throw new Error(`Insufficient inventory for ${item.item}`);
+          }
+          product.productInventory = newQuantity;
+          await updateProduct(productDB, product);
+        }
+      }
+    }
+
+    // // Save grouped sale record
+    await addSale(salesDB, groupedSale);
+
+    // Reset form
+    this.items = [{
+      item: '',
+      unit_price: '',
+      quantity: '',
+      amount: ''
+    }];
+
+    alert('Sales transaction completed successfully');
+    window.location.reload();
+
+  } catch (error) {
+    console.error('Error saving sales:', error);
+    alert(`Failed to save sales: ${error.message}`);
+  }
+},
 
 
 
@@ -760,67 +881,77 @@ export default defineComponent({
 
 
 
-   async updateStatus(status) {
-      try {
-        const db = await openSalesDB();
-        const updatedSale = {
-          ...this.selectedSale,
-          status: status,
-        };
+    async updateStatus(status) {
+  try {
+    const salesDB = await openSalesDB();
+    const productDB = await openDB();
+    const products = await getAllProducts(productDB);
 
-        if (status === 'Completed') {
-          const productsDB = await openDB();
-          const products = await getAllProducts(productsDB);
+    // Handle both single and grouped sales
+    if (this.selectedSale.items) {
+      // Grouped sales case
+      const updatedSale = {
+        ...this.selectedSale,
+        status: status,
+        items: this.selectedSale.items.map(item => ({
+          ...item,
+          status: status
+        }))
+      };
 
-          // Find the product by name from the updated sale
-          const productName = this.selectedSale.item;
-          const product = products.find(p => p.brandName === productName);
+      if (status === 'Completed') {
+        // Validate and update inventory for all items
+        for (const item of updatedSale.items) {
+          const product = products.find(p => p.brandName === item.item);
+          if (!product) {
+            throw new Error(`Product not found: ${item.item}`);
+          }
 
-          console.log(this.selectedSale.quantity);
+          const newInventory = product.productInventory - item.quantity;
+          if (newInventory < 0) {
+            throw new Error(`Insufficient inventory for ${item.item}`);
+          }
 
+          product.productInventory = newInventory;
+          await updateProduct(productDB, product);
+        }
+      }
 
-    
+      await updateSale(salesDB, updatedSale);
 
-            if (product) {
-              // Subtract the quantity from product inventory
-              const newInventory = product.productInventory - this.selectedSale.quantity;
-              console.log(newInventory);
-  
-              // Ensure inventory is not negative
-              if (newInventory < 0) {
-                alert(`Insufficient inventory for product: ${productName}`);
-              } else {
+    } else {
+      // Single sale case
+      const updatedSale = {
+        ...this.selectedSale,
+        status: status
+      };
 
-                await updateSale(db, updatedSale);
-                alert(`Sale status updated to ${status}`);
-
-                if (status === 'Completed') {
-                  // Update the product's inventory
-                  product.productInventory = newInventory;
-    
-                  // Save the updated product to the database
-                  await updateProduct(productsDB, product);
-                  alert(`Inventory updated for product: ${productName}`);
-                  
-                }
-
-              }
-            } else {
-              alert(`Product not found: ${productName}`);
-            }
-
-
-
+      if (status === 'Completed') {
+        const product = products.find(p => p.brandName === this.selectedSale.item);
+        if (!product) {
+          throw new Error(`Product not found: ${this.selectedSale.item}`);
         }
 
-        this.loadSales();
-        window.location.reload();
-      } catch (error) {
-        console.error('Error updating sale status:', error);
-        alert('Failed to update sale status');
-      }
-    },
+        const newInventory = product.productInventory - this.selectedSale.quantity;
+        if (newInventory < 0) {
+          throw new Error(`Insufficient inventory for ${this.selectedSale.item}`);
+        }
 
+        product.productInventory = newInventory;
+        await updateProduct(productDB, product);
+      }
+
+      await updateSale(salesDB, updatedSale);
+    }
+
+    await this.loadSales();
+    alert(`Sale status updated to ${status}`);
+
+  } catch (error) {
+    console.error('Error updating sale status:', error);
+    alert(error.message || 'Failed to update sale status');
+  }
+},
 
 
 

@@ -23,7 +23,8 @@
             <h6>Best Selling Product</h6>
             <div class="card mt-4" v-if="bestSellingProduct" style="min-width: 200px;">
               <p class="nametext">{{ bestSellingProduct.name }}</p>
-              <p class="percentage">{{ leastSellingProduct.percentage }} %</p>
+              <p class="percentage">{{ bestSellingProduct.percentage }}%</p>
+
             </div>
           </div>
 
@@ -31,10 +32,22 @@
             <h6 class="ps-4">Least Selling Product</h6>
             <div class="card ms-4 mt-4" v-if="leastSellingProduct" style="min-width: 200px;">
               <p class="nametext">{{ leastSellingProduct.name }}</p>
-              <p class="percentage">{{ bestSellingProduct.percentage }}%</p>
+              <p class="percentage">{{ leastSellingProduct.percentage }} %</p>
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="col-md-6">
+          <div class="mt-4">
+            <h6 class="ps-4">Revenue</h6>
+            <div class="card ms-4 mt-4" v-if="totalRevenue" style="min-width: 200px;">
+              <p class="percentage">{{ totalRevenue }}</p>
             </div>
           </div>
         </div>
+  
       </div>
     </div>
 
@@ -185,6 +198,7 @@ export default defineComponent({
     const products = ref([]);
     const salesData = ref([]);
     const revenue = ref(null);
+    const totalRevenue = ref('0.00');
 
 
 
@@ -203,36 +217,77 @@ export default defineComponent({
 
     // Fetch all sales data from IndexedDB
     const fetchSalesData = async () => {
-      try {
-        const db = await openSalesDB();
-        const sales = await getAllSales(db);
+  try {
+    const db = await openSalesDB();
+    const sales = await getAllSales(db);
 
-        if (sales.length > 0) {
-          hasData.value = true;
-          salesData.value = sales;
+    console.log(sales);
+    
+    
+    if (sales && sales.length > 0) {
+      hasData.value = true;
+      salesData.value = sales;
 
-          const productSales = sales.reduce((acc, sale) => {
-            acc[sale.item] = (acc[sale.item] || 0) + sale.amount;
-            return acc;
-          }, {});
+      // Process grouped sales data
+      const productSales = {};
+      let totalSales = 0;
 
-          const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
-          bestSellingProduct.value = {
-            name: sortedProducts[sortedProducts.length - 1][0],
-            percentage: ((sortedProducts[sortedProducts.length - 1][1] / sales.reduce((acc, sale) => acc + sale.amount, 0)) * 100).toFixed(2)
-          };
-          leastSellingProduct.value = {
-            name: sortedProducts[0][0],
-            percentage: ((sortedProducts[0][1] / sales.reduce((acc, sale) => acc + sale.amount, 0)) * 100).toFixed(2)
-          };
-          revenue.value = sales.reduce((acc, sale) => acc + sale.amount, 0).toFixed(2);
-        } else {
-          hasData.value = false;
+
+      totalRevenue.value = sales.reduce((total, sale) => {
+            return total + parseFloat(sale.totalAmount || 0);
+          }, 0).toFixed(2);
+          
+
+      sales.forEach(sale => {
+        if (sale.status === 'Completed' && sale.items) {
+          sale.items.forEach(item => {
+            const itemName = item.item;
+            const itemAmount = parseFloat(item.amount) || 0;
+            const itemQuantity = parseInt(item.quantity) || 0;
+
+            if (!productSales[itemName]) {
+              productSales[itemName] = {
+                amount: 0,
+                quantity: 0
+              };
+            }
+
+            productSales[itemName].amount += itemAmount;
+            productSales[itemName].quantity += itemQuantity;
+            totalSales += itemAmount;
+          });
         }
-      } catch (error) {
-        console.error('Error fetching sales data:', error);
+      });
+
+      // Calculate best and least selling products
+      const sortedProducts = Object.entries(productSales)
+        .sort((a, b) => b[1].quantity - a[1].quantity);
+
+      if (sortedProducts.length > 0) {
+        bestSellingProduct.value = {
+          name: sortedProducts[0][0],
+          quantity: sortedProducts[0][1].quantity,
+          percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
+        };
+
+        leastSellingProduct.value = {
+          name: sortedProducts[sortedProducts.length - 1][0],
+          quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
+          percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
+        };
+
+        revenue.value = totalSales.toFixed(2);
       }
-    };
+
+      // Initialize chart with processed data
+      initSalesChart(sales);
+    } else {
+      hasData.value = false;
+    }
+  } catch (error) {
+    console.error('Error fetching sales data:', error);
+  }
+};
 
 
 
@@ -264,52 +319,90 @@ export default defineComponent({
       selectedSubCategory.value = subCategory;
     };
 
+
+
+
     // Initialize sales chart
-    const initSalesChart = () => {
-      nextTick(() => {
-        const months = moment.months();
-        const salesByMonth = months.reduce((acc, month) => {
-          acc[month] = 0;
-          return acc;
-        }, {});
+    const initSalesChart = (sales) => {
+  nextTick(() => {
+    const MONTHLY_TARGET = 100; // Target threshold
+    const months = moment.months();
+    const salesByMonth = months.reduce((acc, month) => {
+      acc[month] = 0;
+      return acc;
+    }, {});
 
-        salesData.value.forEach(sale => {
-          const month = moment(sale.created_at, 'YYYY-MM-DD HH:mm:ss').format('MMMM');
-          salesByMonth[month] += sale.amount;
-        });
+    // Calculate monthly quantities
+    sales.forEach(sale => {
+      if (sale.status === 'Completed' && sale.items) {
+        const month = moment(sale.created_at, 'DD/MM/YYYY, HH:mm:ss').format('MMMM');
+        const monthlyQuantity = sale.items.reduce((sum, item) => 
+          sum + parseInt(item.quantity || 0), 0
+        );
+        salesByMonth[month] += monthlyQuantity;
+      }
+    });
 
-        const salesAmounts = months.map(month => salesByMonth[month]);
+    // Calculate percentages against 100 product threshold
+    const percentagesByMonth = months.map(month => 
+      ((salesByMonth[month] / MONTHLY_TARGET) * 100).toFixed(1)
+    );
 
-        const ctxSalesChart = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctxSalesChart, {
-          type: 'bar',
-          data: {
-            labels: months,
-            datasets: [{
-              data: salesAmounts,
-              backgroundColor: 'rgba(68, 155, 82, 1)',
-              borderWidth: 1,
-              borderRadius: 15,
-              barThickness: 13
-            }]
+    const ctx = document.getElementById('salesChart');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [{
+      label: 'Monthly Target Achievement (%)',
+      data: percentagesByMonth,
+      backgroundColor: 'rgba(40, 167, 69, 0.7)', // Bolder green
+      borderColor: 'rgb(25, 135, 84)',           // Darker green border
+      borderWidth: 2,
+      borderRadius: 8,                           // Rounded corners
+      barThickness: 25                          // Thicker bars
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: {
+          stepSize: 10,                         // Steps of 10
+          font: {
+            weight: 'bold'                      // Bold numbers
           },
-          options: {
-            scales: {
-              x: {
-                grid: {
-                  display: false
-                }
-              },
-              y: {
-                grid: {
-                  display: false
-                }
-              }
-            }
+          callback: value => `${value}%`
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)'          // Lighter grid lines
+        }
+      },
+      x: {
+        grid: {
+          display: false                        // Remove x-axis grid
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.raw;
+            const actualSales = salesByMonth[context.label];
+            return `${value}% (${actualSales}/100 products)`;
           }
-        });
-      });
-    };
+        }
+      }
+    }
+  }
+});
+  });
+};
+
+
 
     onMounted(() => {
       nextTick(async () => {
@@ -333,6 +426,7 @@ export default defineComponent({
       selectedSubCategory,
       filterCategory,
       filterSubCategory,
+      totalRevenue,
     };
     
   },

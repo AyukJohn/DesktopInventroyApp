@@ -743,7 +743,7 @@ export default {
         },
 
         async saveProductInfo() {
-            const referenceNumber = `FB${Math.floor(100000000 + Math.random() * 900000000)}`;
+            const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
             try {
                 const db = await openDB();
                 const newProduct = {

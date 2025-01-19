@@ -5,11 +5,11 @@
 
             <ul class="table-list">
                 <router-link to="/salesmanagement" class="router-link ms-3" active-class="active-link">
-                    <span>Sales Management</span>
+                    Sales Management
                 </router-link>
 
                 <router-link to="/orderinfo" class="router-link" active-class="active-link" >
-                    <span>Order Information</span>
+                    Order Information
                 </router-link>
             </ul>
 
@@ -30,7 +30,23 @@
 
 
 
+        <div class="d-flex mt-4">
+            <div class="input-container">
+                <img src="/tabler_search.svg" alt="">
+                <input type="text" placeholder="Search Transaction ID" class="input1"  v-model="searchTransactionNumber" @input="searchSalesProduct">
+            </div>
 
+            <button class="ms-3 btn1"  @click="downloadExcel">
+                <span><img src="/vscode-icons_file-type-excel.svg" alt=""></span>
+                <span class="ps-3">Download Excel</span>
+            </button>
+
+            <!-- <button class="ms-3 btn1" @click="exportToExcel">
+                <span><img src="/vscode-icons_file-type-excel.svg" alt=""></span>
+                <span class="ps-3">Download Excel</span>
+                    
+            </button> -->
+        </div>
 
 
 
@@ -44,7 +60,7 @@
                     </th>
 
                     <th scope="col">
-                        <span>Statu</span>
+                        <span>Status</span>
                         <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
                     </th>
 
@@ -85,7 +101,12 @@
                     </td>
                     <td>{{ sale.created_at }}</td>
                     <!-- <td></td> -->
-                    <td>{{ sale.amount }}</td>
+                   <!-- Replace existing amount cell -->
+                    <td>
+                      {{ sale.totalAmount || sale.amount || 
+                        (sale.items ? sale.items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2) : '0.00') }}
+                    </td>
+
                     <td>{{ sale.transactionNumber }}</td>
                     <td class="ms-5 pt-4">
                         <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span>
@@ -135,13 +156,13 @@
                     <div class="d-flex">
                         <img src="/tabler_playlist-add.svg" alt="" class="me-3" style="height: 40px;">
                         <div class="text-dark">
-                            <h5 class="mb-2">POS</h5>
-                            <p class="mb-0" style="width: 80%;">
+                            <h5 class="mb-2">POS info</h5>
+                            <!-- <p class="mb-0" style="width: 80%;">
                                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus repellendus est alias iure perspiciatis pariatur rerum nesciunt quibusdam at fuga modi.
-                            </p>
+                            </p> -->
                         </div>
                     </div>
-                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;">
+                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;"  data-bs-dismiss="modal" aria-label="Close">
                 </div>
 
 
@@ -161,40 +182,67 @@
                             <!-- Modal Header -->
                         
                             <form @submit.prevent="saveProductSales">
+  <!-- Transaction Info -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <p><strong>Reference:</strong> {{ selectedSale.reference }}</p>
+      <p><strong>Transaction:</strong> {{ selectedSale.transactionNumber }}</p>
+    </div>
+    <div class="col-md-6 text-end">
+      <p><strong>Date:</strong> {{ selectedSale.created_at }}</p>
+      <p><strong>Status:</strong> {{ selectedSale.status }}</p>
+    </div>
+  </div>
 
-                                <!-- Input Section -->
-                                <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
-                                    
-                                    <span>
-                                        <h6>Item</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Unit Price</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Quantity</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" required>
-                                    </span>
-                                    <span>
-                                        <h6>Amount</h6>
-                                        <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly>
-                                    </span>
+  <!-- Single Item Display -->
+  <div v-if="!selectedSale.items" class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+    <span>
+      <h6>Item</h6>
+      <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" readonly>
+    </span>
+    <span>
+      <h6>Unit Price</h6>
+      <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" readonly>
+    </span>
+    <span>
+      <h6>Quantity</h6>
+      <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" readonly>
+    </span>
+    <span>
+      <h6>Amount</h6>
+      <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly>
+    </span>
+  </div>
 
-                                   
-                                
-                                    <!-- <img src="/deleteicon.svg" alt="Delete" style="height: 30px; cursor: pointer;"> -->
-                                </div>
+  <!-- Multiple Items Display -->
+  <div v-else>
+    <div v-for="(item, index) in selectedSale.items" :key="index" 
+         class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+      <span>
+        <h6>Item {{ index + 1 }}</h6>
+        <input type="text" class="form-control" v-model="item.item" style="width: 200px;" readonly>
+      </span>
+      <span>
+        <h6>Unit Price</h6>
+        <input type="text" class="form-control" v-model="item.unit_price" style="width: 200px;" readonly>
+      </span>
+      <span>
+        <h6>Quantity</h6>
+        <input type="text" class="form-control" v-model="item.quantity" style="width: 200px;" readonly>
+      </span>
+      <span>
+        <h6>Amount</h6>
+        <input type="text" class="form-control" v-model="item.amount" style="width: 200px;" readonly>
+      </span>
+    </div>
+  </div>
 
-                                <!-- Footer Section -->
-        
-                                
-                                <div class="text-dark" style="margin-left: 80%; margin-top: 8%;">
-                                    <div>Total: {{ selectedSale.amount }}</div>
-                                </div>
-                                
-                            </form>    
+  <!-- Total Amount -->
+  <div class="text-dark text-end mt-4">
+    <h5>Total Amount: {{ selectedSale.totalAmount || selectedSale.amount }}</h5>
+  </div>
+</form>
+
                         </div>
                         <!-- <img src="/cancelTransaction.svg" alt=""> -->
                         
@@ -234,12 +282,12 @@
                         <img src="/tabler_playlist-add.svg" alt="" class="me-3" style="height: 40px;">
                         <div class="text-dark">
                             <h5 class="mb-2">create POS</h5>
-                            <p class="mb-0" style="width: 80%;">
+                            <!-- <p class="mb-0" style="width: 80%;">
                                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus repellendus est alias iure perspiciatis pariatur rerum nesciunt quibusdam at fuga modi.
-                            </p>
+                            </p> -->
                         </div>
                     </div>
-                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;">
+                    <img src="/cancel.svg" alt="Cancel" style="height: 30px; cursor: pointer;"  data-bs-dismiss="modal" aria-label="Close">
                 </div>
 
 
@@ -260,18 +308,19 @@
                         <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="height: 38vh; border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->
                         
-                            <form @submit.prevent="saveProductSales">
+                            <!-- <form @submit.prevent="saveProductSales">
 
-                                <!-- Input Section -->
+                               
                                 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
-                                    
+
+                                  <div>
                                     <span>
                                         <h6>Item</h6>
-                                        <input type="text" class="form-control" v-model="item" style="width: 200px;" required>
+                                        <input type="text" class="form-control" @input="fetchUnitPrice"  placeholder="ITEM(size)" v-model="item" style="width: 200px;" required>
                                     </span>
                                     <span>
                                         <h6>Unit Price</h6>
-                                        <input type="text" class="form-control" v-model="unit_price" style="width: 200px;" required>
+                                        <input type="text" class="form-control" v-model="unit_price" style="width: 200px;" required readonly>
                                     </span>
                                     <span>
                                         <h6>Quantity</h6>
@@ -281,17 +330,67 @@
                                         <h6>Amount</h6>
                                         <input type="text" class="form-control" v-model="amount" style="width: 200px;" readonly>
                                     </span>
-
+                                  </div>
+                                    
                                 </div>
 
-                                <!-- Footer Section -->
+
+                                <button 
+                              type="button"
+                              class="btn btn-secondary mt-3"
+                              @click="addNewItem"
+                            >
+                              Add More Items
+                            </button>
+                                
         
                                 
                                 <div class="text-dark" style="margin-left: 80%; margin-top: 8%;">
                                     <div>Total: {{ amount }}</div>
                                 </div>
                                 
-                            </form>    
+                            </form> -->
+
+                            <form @submit.prevent="saveProductSales">
+                              <!-- Iterate over items array -->
+                              <div v-for="(item, index) in items" :key="index" class="item-group mb-4">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                                  <span>
+                                    <h6>Item</h6>
+                                    <input type="text" class="form-control" @input="fetchUnitPrice(index)" 
+                                          v-model="item.item" placeholder="ITEM(size)" style="width: 200px;" required>
+                                  </span>
+                                  <span>
+                                    <h6>Unit Price</h6>
+                                    <input type="text" class="form-control" v-model="item.unit_price" 
+                                          style="width: 200px;" required readonly>
+                                  </span>
+                                  <span>
+                                    <h6>Quantity</h6>
+                                    <input type="text" class="form-control" v-model="item.quantity" 
+                                          @input="calculateAmount(index)" style="width: 200px;" required>
+                                  </span>
+                                  <span>
+                                    <h6>Amount</h6>
+                                    <input type="text" class="form-control" v-model="item.amount" 
+                                          style="width: 200px;" readonly>
+                                  </span>
+                                  <button type="button" class="btn btn-danger" @click="removeItem(index)" 
+                                          v-if="items.length > 1">Remove</button>
+                                </div>
+                              </div>
+
+                              <div class="d-flex gap-3 mt-3">
+                                <button type="button" class="btn btn-secondary" @click="addNewItem">
+                                  Add More Items
+                                </button>
+                              </div>
+
+                              <div class="text-dark text-end mt-4">
+                                <h5>Total Amount: {{ calculateTotal }}</h5>
+                              </div>
+                            </form>
+
                         </div>
                         <!-- <img src="/cancelTransaction.svg" alt=""> -->
                         
@@ -316,237 +415,587 @@
         </div>
     </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="salesreportModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      
+      <div class="modal-dialog" style="max-width: 90vw !important;">
+        <div class="modal-content" style="height: 100vh !important;">
+
+            <div class="modal-header">
+              
+              <div class="title">
+                <h3>Sales Report</h3>
+                <!-- <p>Parchment be turns stand veela fawkes mistletoe snare drops.</p> -->
+              </div>
+
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+
+
+
+              <div class="mb-5 chartbordwrapper">
+
+                <div class="dashboard mt-5" style="margin: 30px;">
+            
+  
+                  <div class="row">
+  
+                    <div class="col-md-6">
+  
+                    
+  
+                        <div v-if="!hasData" class="no-data">
+                          <p>No Data Available</p>
+                        </div>
+  
+  
+                          <div class="d-flex">
+  
+                            <div>
+  
+                                <h6>Best Selling Product</h6>
+                                <div class="card mt-4" v-if="bestSellingProduct" style=" min-width: 200px; ">
+                                  <p class="nametext" >{{ bestSellingProduct.name }}</p>
+                                <p class="percentage" style="font-weight: bolder;">{{ leastSellingProduct.percentage }}%</p>
+  
+                                
+                                </div>
+  
+                            </div>
+  
+  
+  
+                            <div>
+  
+                              <h6 class="ps-4">Least Selling Product</h6>
+                              <div class="card ms-4 mt-4" v-if="leastSellingProduct" style=" min-width: 200px; ">
+                                <p  class="nametext">{{ leastSellingProduct.name }}</p>
+                                <p class="percentage" style="font-weight: bolder;">{{ bestSellingProduct.percentage }}%</p>
+                              </div>
+  
+                            </div>
+  
+  
+                          </div>
+                        
+                  
+                        <div class="card revenucard mt-4" v-if="revenue"   style=" min-width: 150px;">
+                          <h6 class="nametext">Revenue</h6>
+                          
+                          <p class="percentage" style="font-weight: bolder;"> {{ Number(revenue).toLocaleString() }}  </p>
+                        </div>
+                        
+                    
+  
+                    </div>
+  
+                    <div class="col-md-6">
+                      <div class="card chart-card" style=" min-width: 400px; border-radius: 20px;">
+                        <h4 style="font-size: small; font-weight: lighter; color: #000;">Activity</h4>
+                        <hr>
+                        <canvas id="salesChart"></canvas>
+                      </div>
+                    </div>
+  
+                  </div>
+                </div>
+
+
+              </div>
+        
+
+
+
+          </div>
+          
+      </div>
+    </div>
+
 </template>
+
+
 
 <script>
 
-import { openSalesDB, addSale, getAllSales, updateSale } from '../utils/salesDB.js';
+import { defineComponent, onMounted, ref, watch, nextTick } from 'vue';
+import { openSalesDB, getAllSales, addSale, updateSale } from '../utils/salesDB';
+import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
+
+import Chart from 'chart.js/auto';
+import moment from 'moment';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
-export default{
+export default defineComponent({
+  data() {
+    return {
+      item: "",
+      unit_price: "",
+      quantity: "",
+      amount: "",
+      status: "",
+      sales: [],
+      filteredSales: [],
+      currentPage: 1,
+      pageSize: 3,
+      selectedSale: {},
+      searchTransactionNumber: "",
+      isAdmin: false,
 
-    data() {
-        return {
-            item:"",
-            unit_price:"",
-            quantity:"",
-            amount:"",
-            status:"",
-            sales: [],
-            filteredSales: [],
-            currentPage: 1,
-            pageSize: 3,
-            selectedSale: {},
-            searchTransactionNumber: "",
+       items: [{
+        name: '',
+        unitPrice: '',
+        quantity: '',
+        amount: ''
+    }]
+    };
+  },
 
+  setup() {
+    const bestSellingProduct = ref(null);
+    const leastSellingProduct = ref(null);
+    const revenue = ref(null);
+    const hasData = ref(false);
+    const salesData = ref([]);
+
+
+    
+
+    
+    const fetchData = async () => {
+      try {
+        const db = await openSalesDB();
+        const sales = await getAllSales(db);
+
+        if (sales.length > 0) {
+          hasData.value = true;
+          salesData.value = sales;
+
+          const productSales = sales.reduce((acc, sale) => {
+            acc[sale.item] = (acc[sale.item] || 0) + sale.amount;
+            return acc;
+          }, {});
+
+          const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
+          bestSellingProduct.value = {
+            name: sortedProducts[sortedProducts.length - 1][0],
+            percentage: ((sortedProducts[sortedProducts.length - 1][1] / sales.reduce((acc, sale) => acc + sale.amount, 0)) * 100).toFixed(2)
+          };
+          leastSellingProduct.value = {
+            name: sortedProducts[0][0],
+            percentage: ((sortedProducts[0][1] / sales.reduce((acc, sale) => acc + sale.amount, 0)) * 100).toFixed(2)
+          };
+          revenue.value = sales.reduce((acc, sale) => acc + sale.amount, 0).toFixed(2);
+        } else {
+          hasData.value = false;
         }
-    },
+      } catch (error) {
+        console.error('Error fetching sales data:', error);
+      }
+    };
 
+    const initializeCharts = () => {
+      nextTick(() => {
+        const months = moment.months();
+        const salesByMonth = months.reduce((acc, month) => {
+          acc[month] = 0;
+          return acc;
+        }, {});
 
-    mounted() {
-        this.loadSales()
-    },
+        salesData.value.forEach(sale => {
+          const month = moment(sale.created_at, 'YYYY-MM-DD HH:mm:ss').format('MMMM');
+          salesByMonth[month] += sale.amount;
+        });
 
-    watch: {
-        unit_price: 'calculateAmount',
-        quantity: 'calculateAmount'
-    },
+        const salesAmounts = months.map(month => salesByMonth[month]);
 
-
-    computed: {
-        sortedSales() {
-            return this.filteredSales.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        },
-
-
-        paginatedSales() {
-            const start = (this.currentPage - 1) * this.pageSize;
-            const end = start + this.pageSize;
-            return this.sortedSales.slice(start, end);
-        },
-
-        totalPages() {
-            // return Math.ceil(this.sortedSales.length / this.pageSize);
-            return Math.ceil(this.filteredSales.length / this.pageSize);
-
-        }
-    },
-
-
-
-    methods: {
-        calculateAmount() {
-            this.amount = this.unit_price * this.quantity;
-        },
-
-        async saveProductSales(status) {
-            const referenceNumber = `FB${Math.floor(100000000 + Math.random() * 900000000)}`;
-            const transactionNumber = `#${Math.floor(100000000 + Math.random() * 900000000)}`;
-
-            try {
-                const db = await openSalesDB();
-                const newSale = {
-                    item: this.item,
-                    unit_price: this.unit_price,
-                    quantity: this.quantity,
-                    amount: this.amount,
-                    reference: referenceNumber, 
-                    transactionNumber: transactionNumber,
-                    status: status,
-                    created_at: new Date().toLocaleString(),
-
-                };
-                await addSale(db, newSale);
-                alert('Sale added successfully');
-                // this.item = "";
-                // this.unit_price = "";
-                // this.quantity = "";
-                // this.amount = "";
-                window.location.reload()
-            } catch (error) {
-                console.error('Error adding sale:', error);
-                alert('Failed to add sale');
+        const ctxSalesChart = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctxSalesChart, {
+          type: 'bar',
+          data: {
+            labels: months,
+            datasets: [{
+              data: salesAmounts,
+              backgroundColor: 'rgba(68, 155, 82, 1)',
+              borderWidth: 1,
+              borderRadius: 15,
+              barThickness: 13
+            }]
+          },
+          options: {
+            scales: {
+              x: {
+                grid: {
+                  display: false
+                }
+              },
+              y: {
+                grid: {
+                  display: false
+                }
+              }
             }
-        },
+          }
+        });
+      });
+    };
 
-        async loadSales() {
-            try {
-                const db = await openSalesDB();
-                const sales = await getAllSales(db);
-                console.log(sales);
-                
-                this.sales = sales;
-                this.filteredSales= this.sales;
+    onMounted(() => {
+      fetchData();
+    });
 
-            } catch (error) {
-                console.error("Error loading saless:", error);
-            }
-        },
+    watch([bestSellingProduct, leastSellingProduct], () => {
+      if (bestSellingProduct.value && leastSellingProduct.value) {
+        initializeCharts();
+      }
 
+    });
 
-        searchSalesProduct() {
-            const query = this.searchTransactionNumber.trim().toLowerCase();
+    return {
+      bestSellingProduct,
+      leastSellingProduct,
+      revenue,
+      hasData,
+    };
+  },
 
-            if (query === "") {
-                this.filteredSales = this.sales;
-            } else {
-                this.filteredSales = this.sales.filter((sale) => {
-                return sale.transactionNumber && sale.transactionNumber.toLowerCase().includes(query);
-                });
-            }
-            this.currentPage = 1;
-        },
+  mounted() {
+    this.loadSales();
 
-
-        nextPage() {
-            if (this.currentPage < this.totalPages) {
-                this.currentPage++;
-            }
-        },
-
-        prevPage() {
-            if (this.currentPage > 1) {
-                this.currentPage--;
-            }
-        },
-
-        goToPage(page) {
-            this.currentPage = page;
-        },
-
-        viewSale(sale) {
-            this.selectedSale = sale;
-        },
-        async updateStatus(status) {
-            try {
-                const db = await openSalesDB();
-                const updatedSale = {
-                    ...this.selectedSale,
-                    status: status
-                };
-                await updateSale(db, updatedSale);
-                alert(`Sale status updated to ${status}`);
-                this.loadSales(); // Reload sales data
-                window.location.reload()
-            } catch (error) {
-                console.error('Error updating sale status:', error);
-                alert('Failed to update sale status');
-            }
-        },
-
-
-        // downloadExcel() {
-        //     const ws = XLSX.utils.json_to_sheet(this.sales);
-        //     const wb = XLSX.utils.book_new();
-        //     XLSX.utils.book_append_sheet(wb, ws, "Sales");
-        //     XLSX.writeFile(wb, "SalesData.xlsx");
-        // },
-
-
-        downloadExcel() {
-            // Prepare data for Excel
-            const worksheetData = this.sales.map((sale) => ({
-                Item: sale.item,
-                SKU: sale.reference,
-                Status: sale.status,
-                Date: sale.created_at,
-                Amount: sale.amount,
-                Unit_Price: sale.unit_price,
-                Quantity: sale.quantity,
-                TransactionID: sale.transactionNumber,
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-
-            const workbook = XLSX.utils.book_new();
-
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-
-            XLSX.writeFile(workbook, "SalesData.xlsx");
-
-        },
-
-        downloadReceipt(sale) {
-            const doc = new jsPDF();
-            doc.text(`Receipt for Transaction: ${sale.transactionNumber}`, 10, 10);
-            doc.text(`Item: ${sale.item}`, 10, 20);
-            doc.text(`Unit Price: ${sale.unit_price}`, 10, 30);
-            doc.text(`Quantity: ${sale.quantity}`, 10, 40);
-            doc.text(`Amount: ${sale.amount}`, 10, 50);
-            doc.text(`Status: ${sale.status}`, 10, 60);
-            doc.text(`Date: ${sale.created_at}`, 10, 70);
-            doc.text(`SKU: ${sale.reference}`, 10, 80);
-            doc.save(`Receipt_${sale.transactionNumber}.pdf`);
-        },
-
-
-        printReceipt(sale) {
-            const doc = new jsPDF();
-            doc.text(`Receipt for Transaction: ${sale.transactionNumber}`, 10, 10);
-            doc.text(`Item: ${sale.item}`, 10, 20);
-            doc.text(`Unit Price: ${sale.unit_price}`, 10, 30);
-            doc.text(`Quantity: ${sale.quantity}`, 10, 40);
-            doc.text(`Amount: ${sale.amount}`, 10, 50);
-            doc.text(`Status: ${sale.status}`, 10, 60);
-            doc.text(`Date: ${sale.created_at}`, 10, 70);
-            doc.text(`SKU: ${sale.reference}`, 10, 80);
-            doc.autoPrint();
-            window.open(doc.output('bloburl'), '_blank');
-        }
-
-        
+    const userLogin = localStorage.getItem('name');
+    if (!userLogin) {
+      this.$router.push({ name: 'login' });
+    } else {
+      this.name = userLogin;
+      // Check if the logged-in user is 'Admin'
+      this.isAdmin = this.name === 'Admin';
     }
 
+  },
+
+  watch: {
+    unit_price: 'calculateAmount',
+    quantity: 'calculateAmount'
+  },
+
+  computed: {
+
+    getSaleAmount(sale) {
+    if (sale.totalAmount) return sale.totalAmount;
+    if (sale.amount) return sale.amount;
+    if (sale.items) {
+      return sale.items.reduce((sum, item) => 
+        sum + parseFloat(item.amount), 0
+      ).toFixed(2);
+    }
+    return '0.00';
+  },
+
+    calculateTotal() {
+      return this.items.reduce((total, item) => {
+        return total + (parseFloat(item.amount) || 0)
+      }, 0).toFixed(2)
+    },
+
+    sortedSales() {
+      return this.filteredSales.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    },
+
+    paginatedSales() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.sortedSales.slice(start, end);
+    },
+
+    totalPages() {
+      return Math.ceil(this.filteredSales.length / this.pageSize);
+    }
+  },
+
+  methods: {
+
+    addNewItem() {
+      this.items.push({
+        item: '',
+        unit_price: '',
+        quantity: '',
+        amount: ''
+      })
+    },
+
+    removeItem(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1)
+      }
+    },
+
+
+
+    calculateAmount(index) {
+      const item = this.items[index]
+      item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
+    },
+
+
+    async fetchUnitPrice(index) {
+      try {
+        const db = await openDB()
+        const products = await getAllProducts(db)
+
+        const product = products.find(p => p.brandName === this.items[index].item)
+
+        
+        if (product) {
+          this.items[index].unit_price = product.sellingPrice
+          this.calculateAmount(index)
+        }
+      } catch (error) {
+        console.error('Error fetching unit price:', error)
+      }
+    },
+
+
+
+    async saveProductSales(status) {
+  try {
+    const referenceNumber = `FB${Math.floor(100000000 + Math.random() * 900000000)}`;
+    const transactionNumber = `#${Math.floor(100000000 + Math.random() * 900000000)}`;
+    const salesDB = await openSalesDB();
+    const productDB = await openDB();
+
+    // Calculate total amount for all items
+    const totalAmount = this.items.reduce((sum, item) => 
+      sum + parseFloat(item.amount || 0), 0
+    ).toFixed(2);
+
+    // Create grouped sale record
+    const groupedSale = {
+      reference: referenceNumber,
+      transactionNumber: transactionNumber,
+      status: status,
+      created_at: new Date().toLocaleString(),
+      totalAmount: totalAmount,
+      items: this.items.map(item => ({
+        item: item.item,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        amount: item.amount
+      }))
+    };
+
+    console.log(groupedSale);
+    
+
+    // Update inventory for all items if status is Completed
+    if (status === 'Completed') {
+      const products = await getAllProducts(productDB);
+      
+      for (const item of this.items) {
+        const product = products.find(p => p.brandName === item.item);
+        if (product) {
+          const newQuantity = product.productInventory - parseInt(item.quantity);
+          if (newQuantity < 0) {
+            throw new Error(`Insufficient inventory for ${item.item}`);
+          }
+          product.productInventory = newQuantity;
+          await updateProduct(productDB, product);
+        }
+      }
+    }
+
+    // // Save grouped sale record
+    await addSale(salesDB, groupedSale);
+
+    // Reset form
+    this.items = [{
+      item: '',
+      unit_price: '',
+      quantity: '',
+      amount: ''
+    }];
+
+    alert('Sales transaction completed successfully');
+    window.location.reload();
+
+  } catch (error) {
+    console.error('Error saving sales:', error);
+    alert(`Failed to save sales: ${error.message}`);
+  }
+},
+
+
+
+
+    async loadSales() {
+      try {
+        const db = await openSalesDB();
+        const sales = await getAllSales(db);
+        this.sales = sales;
+        this.filteredSales = this.sales;
+      } catch (error) {
+        console.error('Error loading sales:', error);
+      }
+    },
+
+    searchSalesProduct() {
+      const query = this.searchTransactionNumber.trim().toLowerCase();
+
+      if (query === "") {
+        this.filteredSales = this.sales;
+      } else {
+        this.filteredSales = this.sales.filter((sale) => {
+          return sale.transactionNumber && sale.transactionNumber.toLowerCase().includes(query);
+        });
+      }
+      this.currentPage = 1;
+    },
+
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+
+    goToPage(page) {
+      this.currentPage = page;
+    },
+
+    viewSale(sale) {
+      this.selectedSale = sale;
+    },
+
+
+
+
+   async updateStatus(status) {
+      try {
+        const db = await openSalesDB();
+        const updatedSale = {
+          ...this.selectedSale,
+          status: status,
+        };
+
+        if (status === 'Completed') {
+          const productsDB = await openDB();
+          const products = await getAllProducts(productsDB);
+
+          // Find the product by name from the updated sale
+          const productName = this.selectedSale.item;
+          const product = products.find(p => p.brandName === productName);
+
+          console.log(this.selectedSale.quantity);
+
+
+    
+
+            if (product) {
+              // Subtract the quantity from product inventory
+              const newInventory = product.productInventory - this.selectedSale.quantity;
+              console.log(newInventory);
   
-}
+              // Ensure inventory is not negative
+              if (newInventory < 0) {
+                alert(`Insufficient inventory for product: ${productName}`);
+              } else {
+
+                await updateSale(db, updatedSale);
+                alert(`Sale status updated to ${status}`);
+
+                if (status === 'Completed') {
+                  // Update the product's inventory
+                  product.productInventory = newInventory;
+    
+                  // Save the updated product to the database
+                  await updateProduct(productsDB, product);
+                  alert(`Inventory updated for product: ${productName}`);
+                  
+                }
+
+              }
+            } else {
+              alert(`Product not found: ${productName}`);
+            }
+
+
+
+        }
+
+        this.loadSales();
+        window.location.reload();
+      } catch (error) {
+        console.error('Error updating sale status:', error);
+        alert('Failed to update sale status');
+      }
+    },
+
+
+
+
+    downloadExcel() {
+      const worksheetData = this.sales.map((sale) => ({
+        Item: sale.item,
+        SKU: sale.reference,
+        Status: sale.status,
+        Date: sale.created_at,
+        Amount: sale.amount,
+        Unit_Price: sale.unit_price,
+        Quantity: sale.quantity,
+        TransactionID: sale.transactionNumber,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+      XLSX.writeFile(workbook, "SalesData.xlsx");
+    },
+
+    downloadReceipt(sale) {
+      const doc = new jsPDF();
+      doc.text(`Receipt for Transaction: ${sale.transactionNumber}`, 10, 10);
+      doc.text(`Item: ${sale.item}`, 10, 20);
+      doc.text(`Unit Price: ${sale.unit_price }`, 10, 30);
+      doc.text(`Quantity: ${sale.quantity}`, 10, 40);
+      doc.text(`Total Amount: ${sale.amount}`, 10, 50);
+      doc.text(`Status: ${sale.status}`, 10, 60);
+      doc.text(`Transaction Date: ${sale.created_at}`, 10, 70);
+      doc.save(`${sale.transactionNumber}_Receipt.pdf`);
+    },
+  }
+});
+
 
 </script>
+
+
+
+
+
+
 
 <style scoped>
 
 
-.active-link {
+    .active-link {
         border-bottom: 2px solid green;
         color: green !important;
     }
@@ -662,6 +1111,64 @@ export default{
         border: 0.1px solid #c8c8c86f;
         background-color: #fff;
     }
+
+
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card {
+  flex: 1;
+  /* min-width: 200px; */
+  padding: 20px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.chart-card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #d3c6c674;
+  padding: 20px;
+}
+
+.card h2 {
+  margin-bottom: 10px;
+}
+
+.card p {
+  margin-bottom: 10px;
+}
+
+.no-data {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+}
+
+.revenucard{
+  max-width: 200px; 
+  /* color: rgb(42, 161, 6); */
+}
+
+.nametext{
+  font-weight: 100;
+  font-size: small;
+}
+
+.chartbordwrapper{
+  height: 79vh !important; 
+  max-width: 98vw !important; 
+  margin: 30px; 
+  margin-top: 0px; 
+  background-color: #F7FBFC; 
+  border-radius: 20px;
+}
 
     /* .viewslemodal-content {
         background-color: #1dc1ea;

@@ -5,7 +5,7 @@
       <div class="d-flex align-items-center justify-content-between">
 
           <div>
-              <h2>WholeAndRetail</h2>
+              <h2>WholeSale</h2>
               <!-- <h6>List of all SKUs in the system</h6> -->
           </div>
   
@@ -216,6 +216,7 @@
                               <input type="text form-control"   v-model="size" class="mt-2" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
                               </div>
                           </div>
+                          
                           
 
                       <!-- </div>
@@ -610,7 +611,7 @@ Launch demo modal
 
 <script>
 import * as XLSX from "xlsx";
-import { openDB, addProduct, getAllProducts, updateProduct, deleteProduct } from '../utils/wholesale_retail';
+import { openDB, addWholeSale, getAllwholsale, updateWholeSale, deleteWholeSale } from '../utils/wholesale_retail';
 import { openSupplierDB, addSupplier, getAllSuppliers } from '../utils/supplierDB';
 
 export default {
@@ -761,7 +762,7 @@ mounted(){
 
               console.log(newProduct);
 
-              await addProduct(db, newProduct);
+              await addWholeSale(db, newProduct);
               alert('Product added successfully!');
               console.log(newProduct);
 
@@ -777,7 +778,7 @@ mounted(){
       async loadProducts() {
           try {
               const db = await openDB();
-              const products = await getAllProducts(db);
+              const products = await getAllwholsale(db);
               console.log(products);
 
               this.products = products;
@@ -811,7 +812,7 @@ mounted(){
 
               console.log(sanitizedProduct);  // This will log the product without the image field
 
-              await updateProduct(db, sanitizedProduct); // Update the product in the database
+              await updateWholeSale(db, sanitizedProduct); // Update the product in the database
               alert('Product updated successfully!');
               this.loadProducts(); // Reload the product list
           } catch (error) {
@@ -823,7 +824,7 @@ mounted(){
       try {
           console.log("Deleting product with ID:", productId); // Log the ID being passed
           const db = await openDB();
-          await deleteProduct(db, productId); // Attempt to delete the product by ID
+          await deleteWholeSale(db, productId); // Attempt to delete the product by ID
           alert('Product deleted successfully!');
           this.loadProducts(); // Reload the product list after deletion
       } catch (error) {

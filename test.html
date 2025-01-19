@@ -21,3 +21,91 @@ if (indexedDB.databases) {
 } else {
   console.warn("`indexedDB.databases()` is not supported in this browser.");
 } -->
+
+
+Dashboard
+List of sales made on the platform
+
+// Add missing refs
+const hasData = ref(false);
+const salesData = ref([]);
+const bestSellingProduct = ref(null);
+const leastSellingProduct = ref(null);
+const revenue = ref('0.00');
+
+const fetchData = async () => {
+  try {
+    const db = await openSalesDB();
+    const sales = await getAllSales(db);
+    
+    // Initialize default values
+    hasData.value = false;
+    salesData.value = [];
+    bestSellingProduct.value = null;
+    leastSellingProduct.value = null;
+    revenue.value = '0.00';
+
+    // Validate sales data
+    if (!sales || !Array.isArray(sales)) {
+      console.warn('No valid sales data found');
+      return;
+    }
+
+    hasData.value = sales.length > 0;
+    salesData.value = sales;
+
+    const productSales = {};
+    let totalSales = 0;
+
+    // Safe iteration over sales with null checks
+    sales.forEach(sale => {
+      if (!sale || !sale.items || !Array.isArray(sale.items)) {
+        return;
+      }
+
+      if (sale.status === 'Completed') {
+        sale.items.forEach(item => {
+          if (!item || !item.item) {
+            return;
+          }
+
+          const itemName = item.item;
+          const itemAmount = parseFloat(item.amount) || 0;
+          const itemQuantity = parseInt(item.quantity) || 0;
+
+          if (!productSales[itemName]) {
+            productSales[itemName] = {
+              amount: 0,
+              quantity: 0
+            };
+          }
+
+          productSales[itemName].amount += itemAmount;
+          productSales[itemName].quantity += itemQuantity;
+          totalSales += itemAmount;
+        });
+      }
+    });
+
+    const sortedProducts = Object.entries(productSales);
+    if (sortedProducts.length > 0) {
+      sortedProducts.sort((a, b) => b[1].quantity - a[1].quantity);
+      
+      bestSellingProduct.value = {
+        name: sortedProducts[0][0],
+        quantity: sortedProducts[0][1].quantity,
+        percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
+      };
+
+      leastSellingProduct.value = {
+        name: sortedProducts[sortedProducts.length - 1][0],
+        quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
+        percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
+      };
+
+      revenue.value = totalSales.toFixed(2);
+    }
+  } catch (error) {
+    console.error('Error fetching sales data:', error);
+  }
+};
