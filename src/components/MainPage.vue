@@ -957,17 +957,166 @@ try {
     XLSX.writeFile(workbook, "SalesData.xlsx");
   },
 
-  downloadReceipt(sale) {
-    const doc = new jsPDF();
-    doc.text(`Receipt for Transaction: ${sale.transactionNumber}`, 10, 10);
-    doc.text(`Item: ${sale.item}`, 10, 20);
-    doc.text(`Unit Price: ${sale.unit_price }`, 10, 30);
-    doc.text(`Quantity: ${sale.quantity}`, 10, 40);
-    doc.text(`Total Amount: ${sale.amount}`, 10, 50);
-    doc.text(`Status: ${sale.status}`, 10, 60);
-    doc.text(`Transaction Date: ${sale.created_at}`, 10, 70);
-    doc.save(`${sale.transactionNumber}_Receipt.pdf`);
-  },
+  printReceipt(sale) {
+      try {
+        // Create iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        // Generate receipt content
+        const content = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Print Receipt</title>
+              <style>
+                body { 
+                  font-family: Arial; 
+                  padding: 20px;
+                  max-width: 400px;
+                  margin: auto;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                }
+                th, td {
+                  padding: 8px;
+                  text-align: left;
+                }
+                @media print {
+                  body { margin: 0; }
+                  @page { margin: 1cm; }
+                }
+              </style>
+            </head>
+            <body>
+              <div id="receipt">
+                <h2 style="text-align: center;">STORE RECEIPT</h2>
+                <p>Transaction ID: ${sale.transactionNumber}</p>
+                <p>Date: ${sale.created_at}</p>
+                <p>Status: ${sale.status}</p>
+                <hr>
+                <table>
+                  <tr>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                    <th style="text-align: right;">Amount</th>
+                  </tr>
+                  ${sale.items ? 
+                    sale.items.map(item => `
+                      <tr>
+                        <td>${item.item}</td>
+                        <td>${item.unit_price}</td>
+                        <td>${item.quantity}</td>
+                        <td style="text-align: right;">${item.amount}</td>
+                      </tr>
+                    `).join('') :
+                    `<tr>
+                      <td>${sale.item}</td>
+                      <td>${sale.unit_price}</td>
+                      <td>${sale.quantity}</td>
+                      <td style="text-align: right;">${sale.amount}</td>
+                    </tr>`
+                  }
+                </table>
+                <hr>
+                <p style="text-align: right;">
+                  <strong>Total: ${sale.totalAmount || sale.amount}</strong>
+                </p>
+                <p style="text-align: center; margin-top: 30px;">
+                  Thank you for your business!
+                </p>
+              </div>
+            </body>
+          </html>
+        `;
+
+        // Write content to iframe and print
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(content);
+        doc.close();
+
+        iframe.onload = () => {
+          setTimeout(() => {
+            iframe.contentWindow.print();
+            document.body.removeChild(iframe);
+          }, 500);
+        };
+
+      } catch (error) {
+        console.error('Error printing receipt:', error);
+        alert('Failed to print receipt. Please try again.');
+      }
+    },
+
+
+    downloadReceipt(sale) {
+      try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        
+        // Header
+        doc.setFontSize(20);
+        doc.text("STORE RECEIPT", pageWidth/2, 20, { align: "center" });
+        
+        // Receipt info
+        doc.setFontSize(12);
+        doc.text(`Transaction ID: ${sale.transactionNumber}`, 20, 40);
+        doc.text(`Date: ${sale.created_at}`, 20, 50);
+        doc.text(`Status: ${sale.status}`, 20, 60);
+        
+        // Items table header
+        doc.setLineWidth(0.5);
+        doc.line(20, 70, pageWidth-20, 70);
+        doc.text("Item", 20, 80);
+        doc.text("Unit Price", 80, 80);
+        doc.text("Qty", 130, 80);
+        doc.text("Amount", 170, 80);
+        doc.line(20, 85, pageWidth-20, 85);
+
+        let yPos = 95;
+
+        // Handle multiple items
+        if (sale.items && Array.isArray(sale.items)) {
+          sale.items.forEach(item => {
+            doc.text(item.item?.toString() || '', 20, yPos);
+            doc.text(item.unit_price?.toString() || '', 80, yPos);
+            doc.text(item.quantity?.toString() || '', 130, yPos);
+            doc.text(item.amount?.toString() || '', 170, yPos);
+            yPos += 10;
+          });
+        } 
+        // Handle single item
+        else {
+          doc.text(sale.item?.toString() || '', 20, yPos);
+          doc.text(sale.unit_price?.toString() || '', 80, yPos);
+          doc.text(sale.quantity?.toString() || '', 130, yPos);
+          doc.text(sale.amount?.toString() || '', 170, yPos);
+        }
+
+        // Total
+        doc.line(20, yPos+5, pageWidth-20, yPos+5);
+        doc.setFont(undefined, 'bold');
+        doc.text("Total Amount:", 130, yPos+15);
+        doc.text(sale.totalAmount || sale.amount || '0.00', 170, yPos+15);
+        
+        // Footer
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(10);
+        doc.text("Thank you for your business!", pageWidth/2, yPos+35, { align: "center" });
+
+        doc.save(`${sale.transactionNumber}_Receipt.pdf`);
+      } catch (error) {
+        console.error('Error generating receipt:', error);
+        alert('Failed to generate receipt');
+      }
+    },
+
+
 }
 });
 

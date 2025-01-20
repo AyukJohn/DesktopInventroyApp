@@ -136,6 +136,8 @@
 
 
 
+    
+
 
         <!-- Modal -->
         <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
