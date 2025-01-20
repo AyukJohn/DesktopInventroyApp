@@ -30,6 +30,7 @@
           </router-link>
 
           <router-link v-if="name === 'Admin'" to="/analytics" class="nav-link ms-2">
+            
             <span><img src="/chart-bar-line.svg" alt="" /></span>
             <span class="pt-1 ps-2">Analytics</span>
           </router-link>
