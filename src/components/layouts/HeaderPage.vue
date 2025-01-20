@@ -21,7 +21,7 @@
 
           <router-link to="/inventory" class="nav-link ms-2">
             <span><img src="/tabler_layout-dashboard.svg" alt="" /></span>
-            <span class="pt-1 ps-2">Inventory</span>
+            <span class="pt-1 ps-2">Retail</span>
           </router-link>
 
           <router-link to="/salesmanagement" class="nav-link ms-2">
@@ -47,7 +47,7 @@
 
             <div v-if="isDropdownVisible" class="dropdown-menu">
               <button @click="logout" class="btn btn-sm logout-btn me-5">Log out</button>
-              <button id="uploadDataButton" class="btn btn-sm logout-btn me-5" @click="uploadDataToServer" v-if="name === 'Admin'">Upload Data</button>
+              <button id="uploadDataButton" class="btn btn-sm logout-btn me-5" @click="uploadDataToServer">Upload Data</button>
             </div>
 
           </div>

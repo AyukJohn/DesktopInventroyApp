@@ -200,19 +200,19 @@
                               <div v-if="!selectedSale.items" class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
                                 <span>
                                   <h6>Item</h6>
-                                  <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" readonly>
+                                  <input type="text" class="form-control" v-model="selectedSale.item" style="width: 200px;" readonly required>
                                 </span>
                                 <span>
                                   <h6>Unit Price</h6>
-                                  <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" readonly>
+                                  <input type="text" class="form-control" v-model="selectedSale.unit_price" style="width: 200px;" readonly required>
                                 </span>
                                 <span>
                                   <h6>Quantity</h6>
-                                  <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" readonly>
+                                  <input type="text" class="form-control" v-model="selectedSale.quantity" style="width: 200px;" readonly required>
                                 </span>
                                 <span>
                                   <h6>Amount</h6>
-                                  <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly>
+                                  <input type="text" class="form-control" v-model="selectedSale.amount" style="width: 200px;" readonly required>
                                 </span>
                               </div>
 
@@ -222,19 +222,19 @@
                                     class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
                                   <span>
                                     <h6>Item {{ index + 1 }}</h6>
-                                    <input type="text" class="form-control" v-model="item.item" style="width: 200px;" readonly>
+                                    <input type="text" class="form-control" v-model="item.item" style="width: 200px;" readonly required>
                                   </span>
                                   <span>
                                     <h6>Unit Price</h6>
-                                    <input type="text" class="form-control" v-model="item.unit_price" style="width: 200px;" readonly>
+                                    <input type="text" class="form-control" v-model="item.unit_price" style="width: 200px;" readonly required>
                                   </span>
                                   <span>
                                     <h6>Quantity</h6>
-                                    <input type="text" class="form-control" v-model="item.quantity" style="width: 200px;" readonly>
+                                    <input type="text" class="form-control" v-model="item.quantity" style="width: 200px;" readonly required>
                                   </span>
                                   <span>
                                     <h6>Amount</h6>
-                                    <input type="text" class="form-control" v-model="item.amount" style="width: 200px;" readonly>
+                                    <input type="text" class="form-control" v-model="item.amount" style="width: 200px;" readonly required>
                                   </span>
                                 </div>
                               </div>
@@ -253,7 +253,7 @@
                     <div class="d-flex justify-content-between" style="height: 100px;">
 
                         <div class="d-flex justify-content-between">
-                            <img src="/saveTransaction.svg" alt="Add Item" class="img-fluid"  @click="updateStatus('Pending')">
+                            <img src="/pending.svg" alt="Add Item" class="img-fluid"  @click="updateStatus('Pending')">
                             <img src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="updateStatus('Cancelled')">
                         </div>
 
@@ -360,7 +360,7 @@
                     <div class="d-flex justify-content-between" style="height: 100px;">
 
                         <div class="d-flex justify-content-between">
-                            <img src="/saveTransaction.svg" alt="Add Item" class="img-fluid"  @click="saveProductSales('Pending')">
+                            <img src="/pending.svg" alt="Add Item" class="img-fluid"  @click="saveProductSales('Pending')">
                             <img src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="saveProductSales('Cancelled')">
                         </div>
 
@@ -482,7 +482,7 @@
           
       </div>
     </div>
-
+    
 </template>
 
 
@@ -791,6 +791,15 @@ export default defineComponent({
       }))
     };
 
+    const hasEmptyFields = this.items.some(item => 
+      !item.item || !item.unit_price || !item.quantity || !item.amount
+    );
+
+    if (hasEmptyFields) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
     console.log(groupedSale);
     
 
@@ -886,6 +895,18 @@ export default defineComponent({
     const salesDB = await openSalesDB();
     const productDB = await openDB();
     const products = await getAllProducts(productDB);
+
+
+
+     // Validate required fields in items
+     const hasEmptyFields = this.selectedSale.items.some(item => 
+        !item.item || !item.quantity || !item.unit_price || !item.amount
+      );
+
+      if (hasEmptyFields) {
+        alert("Invalid sale data: Missing required fields");
+        return;
+      }
 
     // Handle both single and grouped sales
     if (this.selectedSale.items) {

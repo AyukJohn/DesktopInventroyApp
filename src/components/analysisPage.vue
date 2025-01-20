@@ -110,7 +110,7 @@
                 <div class="card-body">
                   <div class="header-row d-flex justify-content-between">
                    
-                      <img v-if="product.image" :src="product.image" alt="Sample Image" class="product_image">
+                      <!-- <img v-if="product.image" :src="product.image" alt="Sample Image" class="product_image"> -->
                    
                       <p class="mb-0 ps-4 pt-2" style="font-size: 11px;">{{ product.brandName }}</p>
                  

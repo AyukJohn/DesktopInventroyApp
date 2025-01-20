@@ -5,12 +5,12 @@
         <div class="d-flex align-items-center justify-content-between">
 
             <div>
-                <h2>Inventory</h2>
+                <h2>Retail</h2>
                 <h6>List of all SKUs in the system</h6>
             </div>
     
             <div>
-                    <span data-bs-toggle="modal" data-bs-target="#addProductModal" style="cursor: pointer;"><img src="/addproduct.svg" alt=""></span>
+                    <span v-if="authName === 'Admin'" data-bs-toggle="modal" data-bs-target="#addProductModal" style="cursor: pointer;"><img src="/addproduct.svg" alt=""></span>
                     <span class="ms-3" data-bs-toggle="modal"  data-bs-target="#suppliersInfoModal" style="cursor: pointer;" ><img src="/suplierInfo.svg" alt=""></span>
             </div>
 
@@ -22,7 +22,7 @@
         <div class="d-flex mt-4">
             <div class="input-container">
                 <img src="/tabler_search.svg" alt="">
-                <input type="text" v-model="searchReference" @input="searchProduct"  placeholder="Search SKU" class="input1">
+                <input type="text" v-model="searchReference" @input="searchProduct"  placeholder="Search SKU/Product Name" class="input1">
             </div>
 
             <button class="ms-3 btn1" @click="exportToExcel">
@@ -74,9 +74,9 @@
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="header-row d-flex align-items-center justify-content-between">
-                                    <span class="info" @click="openUpdateModal(product)" data-bs-toggle="modal" data-bs-target="#productInfoModal">
+                                    <!-- <span class="info" @click="openUpdateModal(product)" data-bs-toggle="modal" data-bs-target="#productInfoModal">
                                         <img src="/info.svg" alt="Info Icon" class="img-fluid" />
-                                    </span>
+                                    </span> -->
                                     <span class="productName">
                                         <p class="mb-0">{{ product.brandName }}</p>
                                     </span>
@@ -253,19 +253,19 @@
 
                         <div class="d-flex gap-4">
                         
-                            <div class="upload-box mt-3">
+                            <!-- <div class="upload-box mt-3">
                                 <label for="file-upload" class="upload-label">
                                     <img src="/upload-square-02.svg" alt="" class="upload-icon">
                                     <input type="file" @change="handleImageUpload" id="file-upload" class="upload-input">
                                     <span>Upload product image</span>
                                 </label>
-                            </div>
+                            </div> -->
 
 
                             <div class="select-container mt-3">
                                 <div class="select-box">
                                     <label for="fragrance" class="select-label">Product Inventory</label>
-                                <input type="text form-control" v-model="productInventory" class="mt-2" placeholder="Prodct Inventory" style="outline:none; border: none; width: 150px; height: 30px;">
+                                <input type="text form-control" v-model="productInventory" class="mt-2" placeholder="Product Inventory" style="outline:none; border: none; width: 150px; height: 30px;">
                                 </div>
                             </div>
 
@@ -618,6 +618,8 @@ import { openSupplierDB, addSupplier, getAllSuppliers } from '../utils/supplierD
 export default {
   data() {
     return {
+        authName:null,
+
       brandName: "",
       category: "",
       type: "",
@@ -665,6 +667,11 @@ export default {
 
   mounted(){
 
+    const storedName = localStorage.getItem("name");
+    if (storedName) {
+      this.authName = storedName;
+    }
+
     this.loadProducts().then(() => {
         this.checkLowInventory();
     });
@@ -688,8 +695,12 @@ export default {
             }
 
             if (this.searchReference) {
-                filtered = filtered.filter(product => product.reference.toLowerCase().includes(this.searchReference.toLowerCase()));
-            }
+        const searchQuery = this.searchReference.toLowerCase();
+        filtered = filtered.filter(product => 
+            (product.reference?.toLowerCase().includes(searchQuery)) || 
+            (product.brandName?.toLowerCase().includes(searchQuery))
+        );
+    }
 
             return filtered;
         },
@@ -757,7 +768,7 @@ export default {
                 costPrice: this.costPrice,
                 description: this.description,
                 productInventory: this.productInventory,
-                image: this.image,
+                // image: this.image,
                 reference: referenceNumber // Assuming SKU is passed in
                 };
 
@@ -790,17 +801,27 @@ export default {
 
         },
 
+
         searchProduct() {
             const query = this.searchReference.trim().toLowerCase();
+            console.log("Search query:", query);  // Debug log
 
             if (query === "") {
                 this.filteredProducts = this.products;
             } else {
                 this.filteredProducts = this.products.filter((product) => {
-                return product.reference && product.reference.toLowerCase().includes(query);
+                    console.log("Checking product:", product.reference, product.brandName); // Debug log
+                    
+                    const referenceMatch = product.reference?.toLowerCase().includes(query) || false;
+                    const nameMatch = product.brandName?.toLowerCase().includes(query) || false;
+                    
+                    return referenceMatch || nameMatch;
                 });
             }
+            console.log("Filtered results:", this.filteredProducts); // Debug log
         },
+
+
 
         async updateProductInfo(product) {
             try {
