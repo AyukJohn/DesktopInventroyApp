@@ -74,9 +74,9 @@
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="header-row d-flex align-items-center justify-content-between">
-                                    <!-- <span class="info" @click="openUpdateModal(product)" data-bs-toggle="modal" data-bs-target="#productInfoModal">
+                                    <span class="info" @click="openUpdateModal(product)" data-bs-toggle="modal" data-bs-target="#productInfoModal">
                                         <img src="/info.svg" alt="Info Icon" class="img-fluid" />
-                                    </span> -->
+                                    </span>
                                     <span class="productName">
                                         <p class="mb-0">{{ product.brandName }}</p>
                                     </span>

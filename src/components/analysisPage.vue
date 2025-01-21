@@ -220,20 +220,21 @@ export default defineComponent({
   try {
     const db = await openSalesDB();
     const sales = await getAllSales(db);
+    const completedSales = sales.filter(sale => sale.status === 'Completed');
 
     console.log(sales);
     
     
     if (sales && sales.length > 0) {
       hasData.value = true;
-      salesData.value = sales;
+      salesData.value = completedSales;
 
       // Process grouped sales data
       const productSales = {};
       let totalSales = 0;
 
 
-      totalRevenue.value = sales.reduce((total, sale) => {
+      totalRevenue.value = completedSales.reduce((total, sale) => {
             return total + parseFloat(sale.totalAmount || 0);
           }, 0).toFixed(2);
           

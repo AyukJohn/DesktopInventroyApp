@@ -2,7 +2,7 @@
   <div class="container">
     <nav class="navbar navbar-expand-sm navbar-light">
       <a class="navbar-brand" href="#">
-        <img src="/logo.svg" alt="" />
+        <img src="/logo.jpg" alt="" style="width: 50px; border-radius: 50px;"/>
       </a>
       <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -30,17 +30,17 @@
           </router-link>
 
           <router-link v-if="name === 'Admin'" to="/analytics" class="nav-link ms-2">
-            
+
             <span><img src="/chart-bar-line.svg" alt="" /></span>
             <span class="pt-1 ps-2">Analytics</span>
           </router-link>
 
-          <span class="ms-5">
+          <!-- <span class="ms-5">
             <img src="/notify.svg" alt="" />
-          </span>
+          </span> -->
 
           <!-- Dropdown button for name and logout -->
-          <div class="dropdown ms-5">
+          <div class="dropdown">
             <button class="btn1" @click="toggleDropdown">
               <span>{{ name }}</span>
               <span><img src="/tabler_user-filled.svg" alt="" /></span>
@@ -71,137 +71,148 @@ import { openSupplierDB, getAllSuppliers } from '../../utils/supplierDB';
 
 
 export default {
-  data() {
-    return {
-      name: null,  // Store name
-      isDropdownVisible: false,
-      notificationMessage: "", 
-    };
-  },
-  mounted() {
-    const storedName = localStorage.getItem("name");
-    if (storedName) {
-      this.name = storedName;
-    }
-
-    const storedNotification = localStorage.getItem("notificationMessage");
-    if (storedNotification) {
-      this.notificationMessage = storedNotification;
-      console.log("Notification message:", this.notificationMessage);
-    }
-  },
-
-  methods: {
-    // Toggle dropdown visibility
-    toggleDropdown() {
-      this.isDropdownVisible = !this.isDropdownVisible;
+    data() {
+      return {
+        name: null,  // Store name
+        isDropdownVisible: false,
+        notificationMessage: "", 
+      };
     },
-    // Logout function
-    logout() {
-      localStorage.removeItem("name");  // Remove name from localStorage
-      this.name = null;  // Clear the name in component's data
-      this.$router.push("/login");
-    },
+    mounted() {
+      const storedName = localStorage.getItem("name");
+      if (storedName) {
+        this.name = storedName;
+      }
 
-    // Function to fetch data from IndexedDB
-    async fetchDataFromIndexedDB() {
-      try {
-        const productsDB = await openDB();
-        const products = await getAllProducts(productsDB).then((data) =>
-          data.map((product) => ({
-            type: "product",
-            brandName: product.brandName,
-            category: product.category,
-            costPrice: product.costPrice,
-            sellingPrice: product.sellingPrice,
-            description:  product.description,
-            productInventory:  product.productInventory,
-            reference:  product.reference,
-            size:  product.size,
-          }))
-        );
-
-        const salesDB = await openSalesDB();
-        
-        
-        // const sales = await getAllSales(salesDB).then((data) =>
-        //   data.map((sale) => ({
-        //     type: "sale",
-        //     item: sale.item,
-        //     unit_price: sale.unit_price,
-        //     quantity: sale.quantity,
-        //     amount: sale.amount,
-        //     transactionNumber: sale.transactionNumber,
-        //     status: sale.status,
-        //   }))
-        // );
-
-        console.log(getAllSales(salesDB));
-        
-        const sales = await getAllSales(salesDB).then((data) =>
-        data.flatMap((transaction) => 
-          transaction.items.map((saleItem) => ({
-            type: "sale",
-            item: saleItem.item,
-            unit_price: saleItem.unit_price,
-            quantity: saleItem.quantity,
-            amount: saleItem.amount,
-            transactionNumber: transaction.transactionNumber,
-            status: transaction.status,
-          }))
-        )
-);
-
-        const supplierDB = await openSupplierDB();
-        const suppliers = await getAllSuppliers(supplierDB).then((data) =>
-          data.map((supplier) => ({
-            type: "supplier",
-            supplierName: supplier.name,
-            phoneNumber: supplier.phoneNumber,
-            address: supplier.location,
-            supplyCount: supplier.supplyCount,
-          }))
-        );
-
-        // Combine all data
-        return [...products, ...sales, ...suppliers];
-      } catch (error) {
-        console.error("Error fetching data from IndexedDB:", error);
-        throw error;
+      const storedNotification = localStorage.getItem("notificationMessage");
+      if (storedNotification) {
+        this.notificationMessage = storedNotification;
+        // console.log("Notification message:", this.notificationMessage);
       }
     },
 
-    // Function to upload data to the server
-    async uploadDataToServer() {
-      try {
-        const combinedData = await this.fetchDataFromIndexedDB();
+    methods: {
+        // Toggle dropdown visibility
+        toggleDropdown() {
+          this.isDropdownVisible = !this.isDropdownVisible;
+        },
+        // Logout function
+        logout() {
+          localStorage.removeItem("name");  // Remove name from localStorage
+          this.name = null;  // Clear the name in component's data
+          this.$router.push("/login");
+        },
 
-        console.log(combinedData);
-        
+      // Function to fetch data from IndexedDB
+      async fetchDataFromIndexedDB() {
+        try {
 
-        // Send data to Laravel API
+          const productsDB = await openDB();
 
-        const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/store', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ uploads: combinedData }),
-        });
+          const allProducts = await getAllProducts(productsDB);
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log("Data uploaded successfully:", result);
-          alert('Data uploaded successfully!')
-        } else {
-          console.error("Failed to upload data:", response.status, response.statusText);
+            if (!allProducts || allProducts.length === 0) {
+                alert('No product data found');
+                return;
+            }
+
+          const products = await getAllProducts(productsDB).then((data) =>
+            data.map((product) => ({
+              type: "product",
+              brandName: product.brandName,
+              category: product.category,
+              costPrice: product.costPrice,
+              sellingPrice: product.sellingPrice,
+              description:  product.description,
+              productInventory:  product.productInventory,
+              reference:  product.reference,
+              size:  product.size,
+            }))
+          );
+
+
+
+          const salesDB = await openSalesDB();
+
+
+          const allSales = await getAllSales(salesDB);
+            if (!allSales || allSales.length === 0) {
+              alert('No sales data found');
+              return;
+            }
+          
+          const sales = await getAllSales(salesDB).then((data) =>
+            data.flatMap((transaction) => 
+              transaction.items.map((saleItem) => ({
+                type: "sale",
+                item: saleItem.item,
+                unit_price: saleItem.unit_price,
+                quantity: saleItem.quantity,
+                amount: saleItem.amount,
+                transactionNumber: transaction.transactionNumber,
+                status: transaction.status,
+              }))
+            )
+          );
+
+          const supplierDB = await openSupplierDB();
+
+          const allSuppliers = await getAllSuppliers(supplierDB);
+            if (!allSuppliers || allSuppliers.length === 0) {
+              alert('No supplier data found');
+              return;
+            }
+
+
+          const suppliers = await getAllSuppliers(supplierDB).then((data) =>
+            data.map((supplier) => ({
+              type: "supplier",
+              supplierName: supplier.name,
+              phoneNumber: supplier.phoneNumber,
+              address: supplier.location,
+              supplyCount: supplier.supplyCount,
+            }))
+          );
+
+          // Combine all data
+          return [...products, ...sales, ...suppliers];
+        }catch (error) {
+          console.error("Error fetching data from IndexedDB:", error);
+          throw error;
         }
-      } catch (error) {
-        console.error("Error uploading data to server:", error);
-      }
+      },
+
+      // Function to upload data to the server
+      async uploadDataToServer() {
+          try {
+            const combinedData = await this.fetchDataFromIndexedDB();
+
+            console.log(combinedData);
+            
+
+            // Send data to Laravel API
+
+            const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/store', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ uploads: combinedData }),
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log("Data uploaded successfully:", result);
+              alert('Data uploaded successfully!')
+            } else {
+              console.error("Failed to upload data:", response.status, response.statusText);
+            }
+          } catch (error) {
+            console.error("Error uploading data to server:", error);
+          }
+      },
     },
-  },
 };
 </script>
 
