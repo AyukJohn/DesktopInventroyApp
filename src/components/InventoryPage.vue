@@ -614,7 +614,7 @@
 import * as XLSX from "xlsx";
 import { openDB, addProduct, getAllProducts, updateProduct, deleteProduct } from '../utils/indexDB';
 import { openSupplierDB, addSupplier, getAllSuppliers } from '../utils/supplierDB';
-
+// import { openDB, addWholeSale, getAllwholsale, updateWholeSale, deleteWholeSale } from '../utils/wholesale_retail';
 export default {
   data() {
     return {
@@ -696,12 +696,12 @@ export default {
             }
 
             if (this.searchReference) {
-        const searchQuery = this.searchReference.toLowerCase();
-        filtered = filtered.filter(product => 
-            (product.reference?.toLowerCase().includes(searchQuery)) || 
-            (product.brandName?.toLowerCase().includes(searchQuery))
-        );
-    }
+                const searchQuery = this.searchReference.toLowerCase();
+                filtered = filtered.filter(product => 
+                    (product.reference?.toLowerCase().includes(searchQuery)) || 
+                    (product.brandName?.toLowerCase().includes(searchQuery))
+                );
+            }
 
             return filtered;
         },
