@@ -10,7 +10,7 @@
           </div>
   
           <div>
-                  <span data-bs-toggle="modal" data-bs-target="#addProductModal" style="cursor: pointer;"><img src="/addproduct.svg" alt=""></span>
+                  <span v-if="authName === 'Admin'" data-bs-toggle="modal" data-bs-target="#addProductModal" style="cursor: pointer;"><img src="/addproduct.svg" alt=""></span>
                   <span class="ms-3" data-bs-toggle="modal"  data-bs-target="#suppliersInfoModal" style="cursor: pointer;" ><img src="/suplierInfo.svg" alt=""></span>
           </div>
 
@@ -315,11 +315,11 @@
                               <div class="">
                                   <div class="select-container2">
                                       <div class="select-box2">
-                                          <input type="number" v-model="selectedProduct.productInventory" class="mt-2 ps-3" placeholder="15" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                                          <input type="number" v-model="selectedProduct.productInventory" class="mt-2 ps-3" placeholder="15" style="outline:none; border: none; width: 150px; height: 30px;" required :readonly="authName !== 'Admin'">
                                       </div>
                                   </div>
 
-                                  <button type="submit" class="btn mt-3 text-light" style="background-color: #329141;">
+                                  <button v-if="authName === 'Admin'" type="submit" class="btn mt-3 text-light" style="background-color: #329141;">
                                       <span><img src="/tabler_refresh.svg" alt=""></span>
                                       Update Inventory
                                   </button>
@@ -352,21 +352,21 @@
                       <div class="select-container">
                           <div class="select-box">
                               <label for="brandName" class="select-label">Brand Name</label>
-                              <input type="text" class="mt-2" v-model="selectedProduct.brandName" placeholder="Brand Name" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                              <input type="text" class="mt-2" v-model="selectedProduct.brandName" placeholder="Brand Name" style="outline:none; border: none; width: 150px; height: 30px;" required  :readonly="authName !== 'Admin'">
                           </div>
                       </div>
 
                       <div class="select-container">
                           <div class="select-box">
                               <label for="fragranceFamily" class="select-label">Category</label>
-                              <input type="text" class="mt-2" v-model="selectedProduct.category" placeholder="Category" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                              <input type="text" class="mt-2" v-model="selectedProduct.category" placeholder="Category" style="outline:none; border: none; width: 150px; height: 30px;" required  :readonly="authName !== 'Admin'">
                           </div>
                       </div>
 
                       <div class="select-container">
                           <div class="select-box">
                               <label for="gender" class="select-label">Type</label>
-                              <input type="text" v-model="selectedProduct.type" class="mt-2" placeholder="Type" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                              <input type="text" v-model="selectedProduct.type" class="mt-2" placeholder="Type" style="outline:none; border: none; width: 150px; height: 30px;" required  :readonly="authName !== 'Admin'">
                           </div>
                       </div>
                   </div>
@@ -376,7 +376,7 @@
                       <div class="select-container">
                           <div class="select-box">
                               <label for="sizeType_1" class="select-label">Size</label>
-                              <input type="text" class="mt-2" v-model="selectedProduct.size" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                              <input type="text" class="mt-2" v-model="selectedProduct.size" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required  :readonly="authName !== 'Admin'">
                           </div>
                       </div>
 
@@ -389,7 +389,7 @@
                    <div class="select-container">
                           <div class="select-box">
                               <label for="sizeType_3" class="select-label">Selling Price</label>
-                              <input type="text" class="mt-2" v-model="selectedProduct.sellingPrice" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                              <input type="text" class="mt-2" v-model="selectedProduct.sellingPrice" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required  :readonly="authName !== 'Admin'">
                           </div>
                       </div>
 
@@ -397,7 +397,7 @@
                       <div class="select-container">
                           <div class="select-box">
                               <label for="sizeType_3" class="select-label">Cost Price</label>
-                              <input type="text" class="mt-2" v-model="selectedProduct.costPrice" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required>
+                              <input type="text" class="mt-2" v-model="selectedProduct.costPrice" placeholder="Size" style="outline:none; border: none; width: 150px; height: 30px;" required  :readonly="authName !== 'Admin'">
                           </div>
                       </div>
 
@@ -406,7 +406,7 @@
 
 
                   <div class="form-floating mt-3">
-                      <textarea class="form-control" placeholder="Leave a comment here" v-model="selectedProduct.description" id="floatingTextarea2" style="height: 100px" required></textarea>
+                      <textarea class="form-control" placeholder="Leave a comment here" v-model="selectedProduct.description" id="floatingTextarea2" style="height: 100px" required  :readonly="authName !== 'Admin'"></textarea>
                       <label for="floatingTextarea2">Product Description</label>
                   </div>
               </form>
@@ -617,6 +617,8 @@ import { openSupplierDB, addSupplier, getAllSuppliers } from '../utils/supplierD
 export default {
 data() {
   return {
+    authName:null,
+
     brandName: "",
     category: "",
     type: "",
@@ -663,6 +665,11 @@ data() {
 },
 
 mounted(){
+
+    const storedName = localStorage.getItem("name");
+    if (storedName) {
+      this.authName = storedName;
+    }
 
   this.loadProducts().then(() => {
       this.checkLowInventory();
