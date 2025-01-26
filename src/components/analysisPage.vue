@@ -174,9 +174,9 @@
 
 <script>
 import { defineComponent, ref, computed, onMounted, nextTick } from 'vue';
-import { openSalesDB, getAllSales } from '../utils/salesDB';
+// import { openSalesDB, getAllSales } from '../utils/salesDB';
 // import { openDB, getAllProducts } from '../utils/indexDB';
-import axios from 'axios';
+// import axios from 'axios';
 import Chart from 'chart.js/auto';
 import moment from 'moment';
 

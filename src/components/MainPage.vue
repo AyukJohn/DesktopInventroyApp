@@ -479,12 +479,7 @@
 
 <script>
 
-import { defineComponent, onMounted, ref, watch, nextTick } from 'vue';
-import { openSalesDB, getAllSales,  } from '../utils/salesDB';
-// import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
-
-import Chart from 'chart.js/auto';
-import moment from 'moment';
+import { defineComponent, onMounted, ref, watch } from 'vue';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
@@ -532,7 +527,7 @@ setup() {
 
   watch([bestSellingProduct, leastSellingProduct], () => {
     if (bestSellingProduct.value && leastSellingProduct.value) {
-      initializeCharts();
+      // initializeCharts();
     }
 
   });

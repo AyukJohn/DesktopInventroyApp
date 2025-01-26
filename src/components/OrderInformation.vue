@@ -685,12 +685,9 @@
 
 <script>
 
-import { defineComponent, onMounted, ref, watch, nextTick } from 'vue';
-import { openSalesDB, getAllSales,  } from '../utils/salesDB';
-// import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
+import { defineComponent, onMounted, ref} from 'vue';
 
-import Chart from 'chart.js/auto';
-import moment from 'moment';
+
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
@@ -855,7 +852,7 @@ export default defineComponent({
               unitprice: this.unitprice,
             };
 
-            const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createManageReturns', {
+            await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createManageReturns', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -863,6 +860,8 @@ export default defineComponent({
               },
               body: JSON.stringify(returnData),
             });
+
+           
 
             alert('Return submitted successfully');
             await this.loadReturns()

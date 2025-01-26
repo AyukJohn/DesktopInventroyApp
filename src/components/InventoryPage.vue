@@ -621,8 +621,6 @@
 
 <script>
 import * as XLSX from "xlsx";
-// import { openDB, addProduct, getAllProducts } from '../utils/indexDB';
-import { openSupplierDB, addSupplier, getAllSuppliers } from '../utils/supplierDB';
 import axios from 'axios';
 // import { openDB, addWholeSale, getAllwholsale, updateWholeSale, deleteWholeSale } from '../utils/wholesale_retail';
 export default {
