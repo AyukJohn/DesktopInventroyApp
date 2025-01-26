@@ -23,7 +23,9 @@
             <h6>Best Selling Product</h6>
             <div class="card mt-4" v-if="bestSellingProduct" style="min-width: 200px;">
               <p class="nametext">{{ bestSellingProduct.name }}</p>
-              <p class="percentage">{{ bestSellingProduct.percentage }}%</p>
+              <p class="percentage">{{ leastSellingProduct.percentage }} %</p>
+
+             
 
             </div>
           </div>
@@ -32,7 +34,7 @@
             <h6 class="ps-4">Least Selling Product</h6>
             <div class="card ms-4 mt-4" v-if="leastSellingProduct" style="min-width: 200px;">
               <p class="nametext">{{ leastSellingProduct.name }}</p>
-              <p class="percentage">{{ leastSellingProduct.percentage }} %</p>
+              <p class="percentage">{{ bestSellingProduct.percentage }}%</p>
             </div>
           </div>
 
@@ -43,10 +45,11 @@
           <div class="mt-4">
             <h6 class="ps-4">Revenue</h6>
             <div class="card ms-4 mt-4" v-if="totalRevenue" style="min-width: 200px;">
-              <p class="percentage">{{ totalRevenue }}</p>
+              <p class="percentage">{{ new Intl.NumberFormat('en-US').format(totalRevenue) }}</p>
             </div>
           </div>
         </div>
+
   
       </div>
     </div>
@@ -172,7 +175,8 @@
 <script>
 import { defineComponent, ref, computed, onMounted, nextTick } from 'vue';
 import { openSalesDB, getAllSales } from '../utils/salesDB';
-import { openDB, getAllProducts } from '../utils/indexDB';
+// import { openDB, getAllProducts } from '../utils/indexDB';
+import axios from 'axios';
 import Chart from 'chart.js/auto';
 import moment from 'moment';
 
@@ -204,25 +208,49 @@ export default defineComponent({
 
 
     // Fetch all products from IndexedDB
+    // const fetchProducts = async () => {
+    //   try {
+    //     const db = await openDB(); // Open IndexedDB connection
+    //     products.value = await getAllProducts(db); // Fetch all products
+    //     console.log('Fetched Products:', products.value);  // Log to check if products are fetched correctly
+    //     hasData.value = products.value.length > 0; // Check if data exists
+    //   } catch (error) {
+    //     console.error('Error fetching products:', error);
+    //   }
+    // };
+
+
     const fetchProducts = async () => {
       try {
-        const db = await openDB(); // Open IndexedDB connection
-        products.value = await getAllProducts(db); // Fetch all products
-        console.log('Fetched Products:', products.value);  // Log to check if products are fetched correctly
-        hasData.value = products.value.length > 0; // Check if data exists
-      } catch (error) {
-        console.error('Error fetching products:', error);
+        const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        products.value = data.data;
+
+        console.log('Fetched Products:', products.value);
+      } catch (err) {
+        console.error('Error fetching products:', err);
       }
     };
 
     // Fetch all sales data from IndexedDB
     const fetchSalesData = async () => {
   try {
-    const db = await openSalesDB();
-    const sales = await getAllSales(db);
-    const completedSales = sales.filter(sale => sale.status === 'Completed');
 
-    console.log(sales);
+
+    const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales');
+    const sale_data = await response.json();
+    const sales = sale_data.data;
+    const completedSales = sales.filter(sale => sale.status === 'Completed');
+    console.log(completedSales);
+
+    // const db = await openSalesDB();
+    // const sales = await getAllSales(db);
+    // const completedSales = sales.filter(sale => sale.status === 'Completed');
+
     
     
     if (sales && sales.length > 0) {
@@ -235,7 +263,7 @@ export default defineComponent({
 
 
       totalRevenue.value = completedSales.reduce((total, sale) => {
-            return total + parseFloat(sale.totalAmount || 0);
+            return total + parseFloat(sale.total_amount || 0);
           }, 0).toFixed(2);
           
 
@@ -281,7 +309,8 @@ export default defineComponent({
       }
 
       // Initialize chart with processed data
-      initSalesChart(sales);
+      // console.log('Sales Data:', completedSales);
+      initSalesChart(completedSales);
     } else {
       hasData.value = false;
     }
@@ -323,85 +352,126 @@ export default defineComponent({
 
 
 
-    // Initialize sales chart
-    const initSalesChart = (sales) => {
-  nextTick(() => {
+    let salesChart; // Declare globally to manage chart instance
+
+const initSalesChart = async () => {
+  nextTick(async () => {
     const MONTHLY_TARGET = 100; // Target threshold
-    const months = moment.months();
+    const months = moment.months(); // Array of month names
     const salesByMonth = months.reduce((acc, month) => {
       acc[month] = 0;
       return acc;
     }, {});
 
-    // Calculate monthly quantities
-    sales.forEach(sale => {
-      if (sale.status === 'Completed' && sale.items) {
-        const month = moment(sale.created_at, 'DD/MM/YYYY, HH:mm:ss').format('MMMM');
-        const monthlyQuantity = sale.items.reduce((sum, item) => 
-          sum + parseInt(item.quantity || 0), 0
-        );
-        salesByMonth[month] += monthlyQuantity;
+    try {
+      // Fetch sales data from the API
+      const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales');
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    });
+      const apiResponse = await response.json();
+      const sales = apiResponse.data; // Adjusted for data.data
 
-    // Calculate percentages against 100 product threshold
-    const percentagesByMonth = months.map(month => 
-      ((salesByMonth[month] / MONTHLY_TARGET) * 100).toFixed(1)
-    );
+      // Debugging: Log fetched sales data
+      // console.log("Fetched Sales Data:", sales);
 
-    const ctx = document.getElementById('salesChart');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: months,
-    datasets: [{
-      label: 'Monthly Target Achievement (%)',
-      data: percentagesByMonth,
-      backgroundColor: 'rgba(40, 167, 69, 0.7)', // Bolder green
-      borderColor: 'rgb(25, 135, 84)',           // Darker green border
-      borderWidth: 2,
-      borderRadius: 8,                           // Rounded corners
-      barThickness: 25                          // Thicker bars
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          stepSize: 10,                         // Steps of 10
-          font: {
-            weight: 'bold'                      // Bold numbers
-          },
-          callback: value => `${value}%`
+      // Calculate monthly quantities
+      sales.forEach(sale => {
+        if (sale.status === 'Completed' && sale.items) {
+          // Debugging: Log created_at value
+          // console.log("Sale Created At:", sale.created_at);
+
+          // Parse the date; adjust format if necessary
+          const month = moment(sale.created_at, 'YYYY-MM-DDTHH:mm:ssZ').format('MMMM'); // ISO 8601 example
+          const monthlyQuantity = sale.items.reduce((sum, item) => 
+            sum + parseInt(item.quantity || 0), 0
+          );
+          salesByMonth[month] += monthlyQuantity;
+        }
+      });
+
+      // Debugging: Log calculated sales by month
+      // console.log("Sales by Month:", salesByMonth);
+
+      // Calculate percentages against the monthly target
+      const percentagesByMonth = months.map(month => 
+        ((salesByMonth[month] / MONTHLY_TARGET) * 100).toFixed(1)
+      );
+
+      // Debugging: Log calculated percentages
+      // console.log("Percentages by Month:", percentagesByMonth);
+
+      // Ensure the canvas exists
+      const ctx = document.getElementById('salesChart');
+      if (!ctx) {
+        console.error('Canvas element not found');
+        return;
+      }
+
+      // Destroy the previous chart instance if it exists
+      if (salesChart) {
+        salesChart.destroy();
+      }
+
+      // Create the new chart
+      salesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'Monthly Target Achievement (%)',
+            data: percentagesByMonth,
+            backgroundColor: 'rgba(40, 167, 69, 0.7)', // Bolder green
+            borderColor: 'rgb(25, 135, 84)',           // Darker green border
+            borderWidth: 2,
+            borderRadius: 8,                           // Rounded corners
+            barThickness: 25                          // Thicker bars
+          }]
         },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'          // Lighter grid lines
-        }
-      },
-      x: {
-        grid: {
-          display: false                        // Remove x-axis grid
-        }
-      }
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = context.raw;
-            const actualSales = salesByMonth[context.label];
-            return `${value}% (${actualSales}/100 products)`;
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 10,                         // Steps of 10
+                font: {
+                  weight: 'bold'                      // Bold numbers
+                },
+                callback: value => `${value}%`
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.1)'          // Lighter grid lines
+              }
+            },
+            x: {
+              grid: {
+                display: false                        // Remove x-axis grid
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const value = context.raw;
+                  const actualSales = salesByMonth[context.label];
+                  return `${value}% (${actualSales}/100 products)`;
+                }
+              }
+            }
           }
         }
-      }
+      });
+    } catch (error) {
+      console.error('Failed to fetch sales data:', error);
     }
-  }
-});
   });
 };
+
+
+
 
 
 

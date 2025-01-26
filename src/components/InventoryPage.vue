@@ -79,6 +79,7 @@
                                     </span>
                                     <span class="productName">
                                         <p class="mb-0">{{ product.brandName }}</p>
+                                        <p>({{ product.sale_type.toUpperCase() }})</p>
                                     </span>
                                     <span class="cancel" @click="deleteProductInfo(selectedProduct.id)">
                                         <img src="/cancel.svg" alt="Cancel Icon" class="img-fluid" />
@@ -113,7 +114,7 @@
 
 
             <!-- Pagination -->
-            <nav aria-label="Page navigation">
+            <nav aria-label="Page navigation" class="mt-5">
                 <ul class="pagination justify-content-between">
                     <li class="page-item disabled">
                     <span class="page-link">Page {{ productCurrentPage }} | {{ productCurrentPage }} of {{ productTotalPages }}</span>
@@ -260,6 +261,20 @@
                                     <span>Upload product image</span>
                                 </label>
                             </div> -->
+
+
+                            <div class="select-container mt-3">
+                                <div class="select-box">
+                                    <label for="fragrance" class="select-label">Sale Type</label>
+                                    <select v-model="sale_type" class="mt-2 select-custom" required>
+                                        <option value="" disabled>Sale_Type</option>
+                                        <option value="retaile">Wholesale</option>
+                                        <option value="wholeSale">Retail</option>
+                                    </select>
+
+                                <!-- <input type="text form-control"   v-model="gender" class="mt-2" placeholder="Gender" style="outline:none; border: none; width: 150px; height: 30px;"  required> -->
+                                </div>
+                            </div>
 
 
                             <div class="select-container mt-3">
@@ -488,11 +503,6 @@
                             </th>
     
                             <th scope="col" style="border: none !important;">
-                                Supplier
-                            </th>
-    
-    
-                            <th scope="col" style="border: none !important;">
                                 Location
                             </th>
     
@@ -504,10 +514,9 @@
                         <tbody>
                             <tr class=""  v-for="(supplier, i) in  paginatedSuppliers" :key="i">
                             <td scope="row"  style="padding-top: 4% !important; ">{{ supplier.name }}</td>
-                            <td style="padding-top: 4% !important; padding-bottom: 4%;">{{ supplier.phoneNumber }}</td>
-                            <td  style="padding-top: 4% !important; ">{{ supplier.supplier }}</td>
-                            <td style="padding-top: 4% !important; ">{{ supplier.location }}</td>
-                            <td style="padding-top: 4% !important; ">{{ supplier.supplyCount }}</td>
+                            <td style="padding-top: 4% !important; padding-bottom: 4%;">{{ supplier.phone_number }}</td>
+                            <td style="padding-top: 4% !important; ">{{ supplier.address }}</td>
+                            <td style="padding-top: 4% !important; ">{{ supplier.supply_count }}</td>
                             </tr>
     
                         </tbody>
@@ -612,8 +621,9 @@
 
 <script>
 import * as XLSX from "xlsx";
-import { openDB, addProduct, getAllProducts, updateProduct, deleteProduct } from '../utils/indexDB';
+// import { openDB, addProduct, getAllProducts } from '../utils/indexDB';
 import { openSupplierDB, addSupplier, getAllSuppliers } from '../utils/supplierDB';
+import axios from 'axios';
 // import { openDB, addWholeSale, getAllwholsale, updateWholeSale, deleteWholeSale } from '../utils/wholesale_retail';
 export default {
   data() {
@@ -629,6 +639,7 @@ export default {
       description: "",
       productInventory: "",
       image: null,
+      sale_type: "",
 
       products: [],
       filteredProducts: [],
@@ -756,103 +767,182 @@ export default {
             }
         },
 
+        // async saveProductInfo() {
+        //     const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
+        //     try {
+        //         const db = await openDB();
+        //         const newProduct = {
+        //         brandName: this.brandName,
+        //         category: this.category,
+        //         type: this.type,
+        //         size: this.size,
+        //         sellingPrice: this.sellingPrice,
+        //         costPrice: this.costPrice,
+        //         description: this.description,
+        //         productInventory: this.productInventory,
+        //         // image: this.image,
+        //         reference: referenceNumber // Assuming SKU is passed in
+        //         };
+
+        //         console.log(newProduct);
+
+        //         await addProduct(db, newProduct);
+        //         alert('Product added successfully!');
+        //         console.log(newProduct);
+
+        //         this.loadProducts();
+        //         this.resetForm();
+                
+        //     } catch (error) {
+        //         console.error("Error saving product:", error);
+        //     }
+        // },
+
+
         async saveProductInfo() {
             const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
             try {
-                const db = await openDB();
                 const newProduct = {
-                brandName: this.brandName,
-                category: this.category,
-                type: this.type,
-                size: this.size,
-                sellingPrice: this.sellingPrice,
-                costPrice: this.costPrice,
-                description: this.description,
-                productInventory: this.productInventory,
-                // image: this.image,
-                reference: referenceNumber // Assuming SKU is passed in
+                    brandName: this.brandName,
+                    category: this.category,
+                    type: this.type,
+                    size: this.size,
+                    sellingPrice: this.sellingPrice,
+                    costPrice: this.costPrice,
+                    description: this.description,
+                    productInventory: this.productInventory,
+                    reference: referenceNumber,
+                    sale_type: this.sale_type
                 };
 
-                console.log(newProduct);
+                const response = await axios.post(
+                    'https://backendpro.elechiperfumery.com.ng/api/v1/properties/createProduct',
+                    newProduct,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
 
-                await addProduct(db, newProduct);
-                alert('Product added successfully!');
-                console.log(newProduct);
-
-                this.loadProducts();
-                this.resetForm();
-                
+                if (response.status === 200 || response.status === 201) {
+                    alert('Product added successfully!');
+                    this.loadProducts();
+                    this.resetForm();
+                }
             } catch (error) {
                 console.error("Error saving product:", error);
+                alert('Failed to add product. Please try again.');
             }
         },
 
 
         async loadProducts() {
             try {
-                const db = await openDB();
-                const products = await getAllProducts(db);
-                console.log(products);
+                const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
 
-                this.products = products;
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                this.products = Array.isArray(data.data) ? data.data : [];
                 this.filteredProducts = this.products;
+                
             } catch (error) {
                 console.error("Error loading products:", error);
+                alert('Error loading products: ' + error.message);
             }
-
         },
 
 
-        searchProduct() {
-            const query = this.searchReference.trim().toLowerCase();
-            console.log("Search query:", query);  // Debug log
-
-            if (query === "") {
-                this.filteredProducts = this.products;
-            } else {
-                this.filteredProducts = this.products.filter((product) => {
-                    console.log("Checking product:", product.reference, product.brandName); // Debug log
-                    
-                    const referenceMatch = product.reference?.toLowerCase().includes(query) || false;
-                    const nameMatch = product.brandName?.toLowerCase().includes(query) || false;
-                    
-                    return referenceMatch || nameMatch;
-                });
-            }
-            console.log("Filtered results:", this.filteredProducts); // Debug log
-        },
 
 
+        // async updateProductInfo(product) {
+        //     try {
+        //         // Exclude the 'image' field from the product object
+        //         const sanitizedProduct = { ...product };
+        //         delete sanitizedProduct.image;
+
+        //         // Assuming openDB and updateProduct are functions that handle your database operations
+        //         const db = await openDB();
+
+        //         console.log(sanitizedProduct);  // This will log the product without the image field
+
+        //         await updateProduct(db, sanitizedProduct); // Update the product in the database
+        //         alert('Product updated successfully!');
+        //         this.loadProducts(); // Reload the product list
+        //     } catch (error) {
+        //         console.error("Error updating product:", error);
+        //     }
+        // },
+
+        // async deleteProductInfo(productId) {
+        // try {
+        //     console.log("Deleting product with ID:", productId); // Log the ID being passed
+        //     const db = await openDB();
+        //     await deleteProduct(db, productId); // Attempt to delete the product by ID
+        //     alert('Product deleted successfully!');
+        //     this.loadProducts(); // Reload the product list after deletion
+        // } catch (error) {
+        //     console.error("Error deleting product:", error);
+        // }
+        // },
 
         async updateProductInfo(product) {
             try {
-                // Exclude the 'image' field from the product object
                 const sanitizedProduct = { ...product };
                 delete sanitizedProduct.image;
 
-                // Assuming openDB and updateProduct are functions that handle your database operations
-                const db = await openDB();
+                const response = await axios.put(
+                    `https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${product.id}`,
+                    sanitizedProduct,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
 
-                console.log(sanitizedProduct);  // This will log the product without the image field
-
-                await updateProduct(db, sanitizedProduct); // Update the product in the database
-                alert('Product updated successfully!');
-                this.loadProducts(); // Reload the product list
+                if (response.status === 201) {
+                    alert('Product updated successfully!');
+                    this.loadProducts();
+                } else {
+                    throw new Error(response.data.message || 'Failed to update product');
+                }
             } catch (error) {
                 console.error("Error updating product:", error);
+                alert('Error updating product: ' + (error.response?.data?.message || error.message));
             }
         },
 
         async deleteProductInfo(productId) {
-        try {
-            console.log("Deleting product with ID:", productId); // Log the ID being passed
-            const db = await openDB();
-            await deleteProduct(db, productId); // Attempt to delete the product by ID
-            alert('Product deleted successfully!');
-            this.loadProducts(); // Reload the product list after deletion
-        } catch (error) {
-            console.error("Error deleting product:", error);
-        }
+            try {
+                const response = await axios.delete(
+                    `https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${productId}`,
+                    {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
+                );
+
+                if (response.status === 200) {
+                    alert('Product deleted successfully!');
+                    await this.loadProducts();
+                } else {
+                    throw new Error(response.data.message || 'Failed to delete product');
+                }
+            } catch (error) {
+                console.error("Error deleting product:", error);
+                alert('Error deleting product: ' + (error.response?.data?.message || error.message));
+            }
         },
 
         exportToExcel() {
@@ -904,43 +994,100 @@ export default {
             this.productCurrentPage = page;
         },
 
+
         async addSupplier() {
+            // try {
+            //     // Prepare the supplier data
+            //     const newSupplier = {
+            //     name: this.name,
+            //     phoneNumber: this.phoneNumber,
+            //     supplier: this.supplier,
+            //     location: this.location,
+            //     supplyCount: this.supplyCount
+            //     };
+
+            //     console.log("Adding Supplier:", newSupplier);
+
+            //     // Send the data to the remote server
+            //     const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSupplier', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json', // Specify JSON content type
+            //     },
+            //     body: JSON.stringify(newSupplier), // Send data as JSON
+            //     });
+
+            //     if (!response.ok) {
+            //     throw new Error(`HTTP error! Status: ${response.status}`);
+            //     }
+
+            //     const result = await response.json();
+            //     console.log("Supplier added successfully:", result);
+
+            //     // alert('Supplier added successfully!');
+                
+            //     // Optional: Reload suppliers or reset form
+            //     this.loadSuppliers();
+            //     // window.location.reload();
+            // } catch (error) {
+            //     console.error("Error adding supplier:", error);
+            //     alert('Failed to add supplier. Please try again.');
+            // }
+
             try {
-                const db = await openSupplierDB();
-                const newSupplier = {
-                name: this.name,
-                phoneNumber: this.phoneNumber,
-                supplier: this.supplier,
-                location: this.location,
-                supplyCount: this.supplyCount
+                const newProduct = {
+                    name: this.name,
+                    phone_number: this.phoneNumber,
+                    supplier: this.supplier,
+                    address: this.location,
+                    supply_count: this.supplyCount,
+                    type :'supplier'
                 };
 
-                console.log(newSupplier);
+                const response = await axios.post(
+                    'https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSupplier',
+                    newProduct,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
 
-                await addSupplier(db, newSupplier);
-                alert('Supplier added successfully!');
-                console.log(newSupplier);
-
-                // this.clearForm();
-                this.loadSuppliers();
-                window.location.reload();
+                if (response.status === 200 || response.status === 201) {
+                    // alert('Product added successfully!');
+                    this.loadSuppliers();
+                }
             } catch (error) {
-                console.error("Error saving supplier:", error);
+                console.error("Error saving product:", error);
+                alert('Failed to add product. Please try again.');
             }
         },
+
+
 
         async loadSuppliers() {
             try {
-                const db = await openSupplierDB();
-                const suppliers = await getAllSuppliers(db);
-                console.log(suppliers);
+                // Try fetching from the remote server
+                const response = await axios.get('https://backendpro.elechiperfumery.com.ng/api/v1/properties/suppliers');
 
+                // Check if the response contains suppliers data
+
+                console.log(response.data.data);
+
+                const suppliers = Array.isArray(response.data.data) ? response.data.data : [];
+                const filteredSuppliers = suppliers.filter(supplier => supplier.type === 'supplier');
+                
+              
                 this.suppliers = suppliers;
-                this.filteredSuppliers = this.suppliers;
+                this.filteredSuppliers = filteredSuppliers;
+                
             } catch (error) {
-                console.error("Error loading suppliers:", error);
+                // Handle error if server fetch fails
+                console.error('Error fetching suppliers from server:', error);
             }
         },
+
 
         searchSupplier() {
             const query = this.searchName.trim().toLowerCase();

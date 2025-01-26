@@ -108,7 +108,7 @@
                       (sale.items ? sale.items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2) : '0.00') }}
                   </td>
 
-                  <td>{{ sale.transactionNumber }}</td>
+                  <td>{{ sale.transaction_number }}</td>
                   <td class="ms-5 pt-4">
                       <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span>
                       <span><img src="/downloadicon.svg" alt="" class="ps-3"  @click="downloadReceipt(sale)"  style="cursor: pointer;"></span>
@@ -204,19 +204,16 @@
                                   <th>Unit Price</th>
                                   <th>Reason</th>
                                   <th> Status</th>
-                                  <th>Image</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <tr  v-for="item in returns" :key="item.id" >
                                   <td>{{ item.productName }}</td>
                                   <td>{{ item.transactionNumber }}</td>
-                                  <td>{{ new Date(item.date).toLocaleDateString() }}</td>
-                                  <td>{{ item.unitprice }}</td>
+                                  <td>{{ new Date(item.created_at).toLocaleDateString() }}</td>
+                                  <td>{{ item.unitPrice }}</td>
                                   <td>{{ item.reason }}</td>
-                                  <td> <img src="/returninit.svg" alt="" data-bs-toggle="modal" data-bs-target="#addreturnModal" style="cursor: pointer;"></td>
-                                  <td><img v-if="item.imageData" :src="item.imageData" class="thumbnail"/></td>
-  
+                                  <td> <img src="/returninit.svg" alt=""></td>
                                 </tr>
                               </tbody>
                             </table>
@@ -289,10 +286,10 @@
               </div>
 
 
-              <div class="form-group">
+              <!-- <div class="form-group">
                 <label for="product-name">Date</label>
                 <input type="date" id="date" v-model="date" />
-              </div>
+              </div> -->
 
               <div class="form-group">
                 <label for="reason">Reason for Return</label>
@@ -302,7 +299,7 @@
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <div class="form-group file-upload">
+              <!-- <div class="form-group file-upload">
                 <label>Upload Image Reference</label>
                 <div class="upload-box">
                   <p v-if="uploadedFile">Selected File: {{ uploadedFile.name }}</p>
@@ -316,7 +313,7 @@
                   <button type="button" @click="triggerFileInput">Select File</button>
                 </div>
                 <input type="file" ref="fileInput" @change="handleFileUpload" style="display: none;" />
-              </div>
+              </div> -->
               <button type="submit" class="submit-btn">Submit Return</button>
             </form>
           </div>
@@ -689,9 +686,8 @@
 <script>
 
 import { defineComponent, onMounted, ref, watch, nextTick } from 'vue';
-import { openSalesDB, getAllSales, addSale, updateSale } from '../utils/salesDB';
-import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
-import { ReturnDbService } from '../utils/managereturnsDB';
+import { openSalesDB, getAllSales,  } from '../utils/salesDB';
+// import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
 
 import Chart from 'chart.js/auto';
 import moment from 'moment';
@@ -699,403 +695,282 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
 export default defineComponent({
-data() {
-  return {
-    item: "",
-    unit_price: "",
-    quantity: "",
-    amount: "",
-    status: "",
-    sales: [],
-    filteredSales: [],
-    currentPage: 1,
-    pageSize: 4,
-    selectedSale: {},
-    searchTransactionNumber: "",
-    isAdmin: false,
+  data() {
+    return {
+      item: "",
+      unit_price: "",
+      quantity: "",
+      amount: "",
+      status: "",
+      sales: [],
+      filteredSales: [],
+      currentPage: 1,
+      pageSize: 3,
+      selectedSale: {},
+      searchTransactionNumber: "",
+      isAdmin: false,
+      // product_id:"",
 
-    items: [{
-      name: '',
-      unitPrice: '',
-      quantity: '',
-      amount: ''
-    }],
+       items: [{
+        name: '',
+        unitPrice: '',
+        quantity: '',
+        amount: '',
+        product_id: '',
+        'transactionNumber': '',
+      }],
+
+
+
+      returns: [],
+        transactionNumber: '',
+        productName: '',
+        reason: '',
+        date: '',
+        uploadedFile: null,
+        imagePreview: null,
+        unitprice: '',
+        fileError: null,
+        loading: false,
+        error: null,
+        maxFileSize: 10 * 1024 * 1024,
+        acceptedFileTypes: ['image/jpeg', 'image/png', 'image/jpg']
+    };
+  },
+
+  setup() {
+    const bestSellingProduct = ref(null);
+    const leastSellingProduct = ref(null);
+    const revenue = ref(null);
+    const hasData = ref(false);
+
 
     
-    returns: [],
-    transactionNumber: '',
-    productName: '',
-    reason: '',
-    date: '',
-    uploadedFile: null,
-    imagePreview: null,
-    unitprice: '',
-    fileError: null,
-    loading: false,
-    error: null,
-    maxFileSize: 10 * 1024 * 1024,
-    acceptedFileTypes: ['image/jpeg', 'image/png', 'image/jpg']
+    
 
-  };
-},
+    onMounted(() => {
+ 
 
-setup() {
-  const bestSellingProduct = ref(null);
-  const leastSellingProduct = ref(null);
-  const revenue = ref(null);
-  const hasData = ref(false);
-
-
-  
-  const fetchData = async () => {
-try {
-  const db = await openSalesDB();
-  const sales = await getAllSales(db);
-  
-  // Initialize default values
-  hasData.value = false;
-  const salesData = ref([]);
-  const bestSellingProduct = ref(null);
-  const leastSellingProduct = ref(null);
-  leastSellingProduct.value = null;
-  revenue.value = '0.00';
-
-  // Validate sales data
-  if (Array.isArray(sales) && sales.length > 0) {
-    hasData.value = true;
-    salesData.value = sales;
-
-    const productSales = {};
-    let totalSales = 0;
-
-    // Safe iteration over sales
-    sales.forEach(sale => {
-      // Verify sale has items array
-      if (sale?.status === 'Completed' && Array.isArray(sale?.items)) {
-        sale.items.forEach(item => {
-          if (item?.item) { // Verify item exists and has name
-            const itemName = item.item;
-            const itemAmount = parseFloat(item.amount) || 0;
-            const itemQuantity = parseInt(item.quantity) || 0;
-
-            productSales[itemName] = productSales[itemName] || {
-              amount: 0,
-              quantity: 0
-            };
-
-            productSales[itemName].amount += itemAmount;
-            productSales[itemName].quantity += itemQuantity;
-            totalSales += itemAmount;
-          }
-        });
-      }
     });
 
-    const sortedProducts = Object.entries(productSales);
-    if (sortedProducts.length > 0) {
-      sortedProducts.sort((a, b) => b[1].quantity - a[1].quantity);
-      
-      bestSellingProduct.value = {
-        name: sortedProducts[0][0],
-        quantity: sortedProducts[0][1].quantity,
-        percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
-      };
+    return {
+      bestSellingProduct,
+      leastSellingProduct,
+      revenue,
+      hasData,
+    };
+  },
 
-      leastSellingProduct.value = {
-        name: sortedProducts[sortedProducts.length - 1][0],
-        quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
-        percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
-      };
+  mounted() {
+    this.loadSales();
+    this.loadReturns();
 
-      revenue.value = totalSales.toFixed(2);
+    const userLogin = localStorage.getItem('name');
+    if (!userLogin) {
+      this.$router.push({ name: 'login' });
+    } else {
+      this.name = userLogin;
+      // Check if the logged-in user is 'Admin'
+      this.isAdmin = this.name === 'Admin';
     }
-  }
-} catch (error) {
-  console.error('Error fetching sales data:', error);
-}
-};
-  
 
-  const initializeCharts = (sales) => {
+  },
 
-nextTick(() => {
-  const months = moment.months();
-  const salesByMonth = months.reduce((acc, month) => {
-    acc[month] = 0;
-    return acc;
-  }, {});
+  watch: {
+    unit_price: 'calculateAmount',
+    quantity: 'calculateAmount'
+  },
 
-  // Process grouped sales data for chart
-  sales.forEach(sale => {
-    if (sale.status === 'Completed' && sale.items) {
-      const month = moment(sale.created_at, 'DD/MM/YYYY, HH:mm:ss').format('MMMM');
-      const totalAmount = sale.items.reduce((sum, item) => 
-        sum + parseFloat(item.amount || 0), 0
-      );
-      salesByMonth[month] += totalAmount;
+  computed: {
+
+    getSaleAmount(sale) {
+    if (sale.totalAmount) return sale.totalAmount;
+    if (sale.amount) return sale.amount;
+    if (sale.items) {
+      return sale.items.reduce((sum, item) => 
+        sum + parseFloat(item.amount), 0
+      ).toFixed(2);
     }
-  });
+    return '0.00';
+  },
 
-  const ctx = document.getElementById('salesChart');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: months,
-      datasets: [{
-        label: 'Monthly Sales',
-        data: months.map(month => salesByMonth[month]),
-        backgroundColor: 'rgba(68, 155, 82, 1)',
-        borderWidth: 1,
-        borderRadius: 15,
-        barThickness: 13
-      }]
+    calculateTotal() {
+      return this.items.reduce((total, item) => {
+        return total + (parseFloat(item.amount) || 0)
+      }, 0).toFixed(2)
     },
-    options: {
-      scales: {
-        x: { grid: { display: false } },
-        y: { grid: { display: false } }
-      }
+
+    sortedSales() {
+      return this.filteredSales.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    },
+
+    paginatedSales() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.sortedSales.slice(start, end);
+    },
+
+    totalPages() {
+      return Math.ceil(this.filteredSales.length / this.pageSize);
     }
-  });
-});
-
-
-  };
-  
-
-  onMounted(() => {
-    fetchData();
-  });
-
-  watch([bestSellingProduct, leastSellingProduct], () => {
-    if (bestSellingProduct.value && leastSellingProduct.value) {
-      initializeCharts();
-    }
-
-  });
-
-  return {
-    bestSellingProduct,
-    leastSellingProduct,
-    revenue,
-    hasData,
-  };
-},
-
-mounted() {
-  this.loadSales();
-
-  this.loadReturns();
-
-
-  const userLogin = localStorage.getItem('name');
-  if (!userLogin) {
-    this.$router.push({ name: 'login' });
-  } else {
-    this.name = userLogin;
-    // Check if the logged-in user is 'Admin'
-    this.isAdmin = this.name === 'Admin';
-  }
-
-
-},
-
-watch: {
-  unit_price: 'calculateAmount',
-  quantity: 'calculateAmount'
-},
-
-computed: {
-
-  getSaleAmount(sale) {
-  if (sale.totalAmount) return sale.totalAmount;
-  if (sale.amount) return sale.amount;
-  if (sale.items) {
-    return sale.items.reduce((sum, item) => 
-      sum + parseFloat(item.amount), 0
-    ).toFixed(2);
-  }
-  return '0.00';
-},
-
-  calculateTotal() {
-    return this.items.reduce((total, item) => {
-      return total + (parseFloat(item.amount) || 0)
-    }, 0).toFixed(2)
   },
 
-  sortedSales() {
-    return this.filteredSales.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  },
+  methods: {
 
-  paginatedSales() {
-    const start = (this.currentPage - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    return this.sortedSales.slice(start, end);
-  },
-
-  totalPages() {
-    return Math.ceil(this.filteredSales.length / this.pageSize);
-  }
-},
-
-methods: {
-
-
-    async submitReturn() {
-      try {
-        this.loading = true
-        const returnData = {
-          transactionNumber: this.transactionNumber,
-          productName: this.productName,
-          reason: this.reason,
-          date: this.date,
-          unitprice: this.unitprice,
-          imageData: this.imagePreview
-        }
 
         
-        await ReturnDbService.addReturn(returnData)
-
-        alert('Return submitted successfully')
-
-        await this.loadReturns()
-        this.resetForm()
-      } catch (err) {
-        this.error = err.message
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async loadReturns() {
-      try {
-        this.returns = await ReturnDbService.getAllReturns()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
-    triggerFileInput() {
-      this.$refs.fileInput.click()
-    },
-
-
-    async handleFileUpload(event) {
-      const file = event.target.files[0]
-      if (!file) return
-
-      if (!this.acceptedFileTypes.includes(file.type)) {
-        this.fileError = 'Please select JPG or PNG only'
-        return
-      }
-
-      if (file.size > this.maxFileSize) {
-        this.fileError = 'File must be under 10MB'
-        return
-      }
-
-      this.uploadedFile = file
-      this.fileError = null
-      this.imagePreview = await this.createPreview(file)
-    },
+        // async submitReturn() {
+        //   try {
+        //     this.loading = true
+        //     const returnData = {
+        //       transactionNumber: this.transactionNumber,
+        //       productName: this.productName,
+        //       reason: this.reason,
+        //       date: this.date,
+        //       unitprice: this.unitprice,
+        //     }
+    
+            
+        //     await ReturnDbService.addReturn(returnData)
+    
+        //     alert('Return submitted successfully')
+    
+        //     await this.loadReturns()
+        //     this.resetForm()
+        //   } catch (err) {
+        //     this.error = err.message
+        //   } finally {
+        //     this.loading = false
+        //   }
+        // },
 
 
-    createPreview(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader()
-        reader.onload = (e) => resolve(e.target.result)
-        reader.readAsDataURL(file)
+        async submitReturn() {
+          try {
+
+            const returnData = {
+              transactionNumber: this.transactionNumber,
+              productName: this.productName,
+              reason: this.reason,
+              unitprice: this.unitprice,
+            };
+
+            const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createManageReturns', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify(returnData),
+            });
+
+            alert('Return submitted successfully');
+            await this.loadReturns()
+
+          } catch (err) {
+            console.error('Error submitting return:', err);
+            this.error = err.message;
+            alert('An error occurred while submitting the return. Please try again.');
+          } 
+        },
+
+    
+
+
+
+        // async loadReturns() {
+        //   try {
+        //     this.returns = await ReturnDbService.getAllReturns()
+        //   } catch (err) {
+        //     this.error = err.message
+        //   }
+        // },
+
+        async loadReturns() {
+          try {
+            const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/manageReturns');
+
+            const data = await response.json();
+            console.log(data.data);
+            // Assuming the server returns an array of returns
+            this.returns = data.data || [];
+          } catch (err) {
+            console.error('Error loading returns:', err);
+            this.error = err.message;
+            alert('An error occurred while loading returns. Please try again.');
+          }
+        },
+
+
+
+
+
+
+
+
+
+
+
+    addNewItem() {
+      this.items.push({
+        item: '',
+        unit_price: '',
+        quantity: '',
+        amount: ''
       })
     },
 
-    resetForm() {
-      this.transactionNumber = ''
-      this.productName = ''
-      this.reason = ''
-      this.date = ''
-      this.unitprice = ''
-      this.uploadedFile = null
-      this.imagePreview = null
-      this.fileError = null
-      if (this.$refs.fileInput) {
-        this.$refs.fileInput.value = ''
+    removeItem(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1)
       }
     },
 
 
 
+    calculateAmount(index) {
+      const item = this.items[index]
+      item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
+    },
+
+    fetchUnitPrice(index) {
+      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch products');
+        return response.json();
+      })
+      .then(products => {
+        const product = products.data.find(p => p.brandName === this.items[index].item);
+        if (product) {
+          this.items[index].unit_price = product.sellingPrice;
+          this.items[index].product_id = product.id; // Store ID per item
+          this.calculateAmount(index);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching unit price:', error);
+      });
+    },
 
 
 
-
-
-
-
-
-
-
-  addNewItem() {
-    this.items.push({
-      item: '',
-      unit_price: '',
-      quantity: '',
-      amount: ''
-    })
-  },
-
-  removeItem(index) {
-    if (this.items.length > 1) {
-      this.items.splice(index, 1)
-    }
-  },
-
-
-
-  calculateAmount(index) {
-    const item = this.items[index]
-    item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
-  },
-
-
-  async fetchUnitPrice(index) {
-    try {
-      const db = await openDB()
-      const products = await getAllProducts(db)
-
-      const product = products.find(p => p.brandName === this.items[index].item)
-
-      
-      if (product) {
-        this.items[index].unit_price = product.sellingPrice
-        this.calculateAmount(index)
-      }
-    } catch (error) {
-      console.error('Error fetching unit price:', error)
-    }
-  },
-
-
-
-  async saveProductSales(status){
-
-try {
+    saveProductSales(status) {
   const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
   const transactionNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
-  const salesDB = await openSalesDB();
-  const productDB = await openDB();
 
-  // Calculate total amount for all items
   const totalAmount = this.items.reduce((sum, item) => 
     sum + parseFloat(item.amount || 0), 0
   ).toFixed(2);
 
-  // Create grouped sale record
   const groupedSale = {
     reference: referenceNumber,
     transactionNumber: transactionNumber,
     status: status,
-    created_at: new Date().toLocaleString(),
     totalAmount: totalAmount,
     items: this.items.map(item => ({
       item: item.item,
@@ -1105,351 +980,450 @@ try {
     }))
   };
 
-  console.log(groupedSale);
-  
+  const hasEmptyFields = this.items.some(item => 
+    !item.item || !item.unit_price || !item.quantity || !item.amount
+  );
 
-  // Update inventory for all items if status is Completed
-  if (status === 'Completed') {
-    const products = await getAllProducts(productDB);
-    
-    for (const item of this.items) {
-      const product = products.find(p => p.brandName === item.item);
-      if (product) {
-        const newQuantity = product.productInventory - parseInt(item.quantity);
-        if (newQuantity < 0) {
-          throw new Error(`Insufficient inventory for ${item.item}`);
-        }
-        product.productInventory = newQuantity;
-        await updateProduct(productDB, product);
-      }
-    }
+  if (hasEmptyFields) {
+    alert("Please fill in all required fields");
+    return;
   }
 
-  // // Save grouped sale record
-  await addSale(salesDB, groupedSale);
+  console.log(groupedSale);
+  
+  // First save the sale
+  fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSale', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept':'application/json'
+    },
+    body: JSON.stringify(groupedSale)
+  })
+  .then(response => {
+    // console.log(response.status !== 201);
+    
+    if (response.status !== 201) throw new Error('Failed to save sale');
+    
+    // If status is Completed, update inventory
+    if (status === 'Completed') {
+      return Promise.all(this.items.map(item => 
+      
+      // First fetch current inventory
+      fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${item.product_id}`)
+      .then(response => response.json())
+      .then(product => {
+        const productData = product.data;
+        
 
-  // Reset form
-  this.items = [{
-    item: '',
-    unit_price: '',
-    quantity: '',
-    amount: ''
-  }];
+        const remainingInventory = parseInt(productData.productInventory) - parseInt(item.quantity);
+        
 
-  alert('Sales transaction completed successfully');
-  window.location.reload();
+            if (remainingInventory < 0) {
+              throw new Error(`Insufficient inventory for ${item.item}`);
+            }
+            
 
-} catch (error) {
-  console.error('Error saving sales:', error);
-  alert(`Failed to save sales: ${error.message}`);
-}
+            // Update with remaining inventory
+            return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${item.product_id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({
+                productInventory: remainingInventory
+              })
+            });
+          })
+      ));
+    }
+
+  })
+  .then(() => {
+    this.items = [{
+      item: '',
+      unit_price: '',
+      quantity: '',
+      amount: ''
+    }];
+    // alert('Sales transaction completed successfully');
+    window.location.reload();
+  })
+  .catch(error => {
+    console.error('Error saving sales:', error);
+    // alert(`Failed to save sales: ${error.message}`);
+  });
+},
+
+
+
+  loadSales() {
+    fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to fetch sales');
+      return response.json();
+    })
+    .then(data => {
+      this.sales = data.data;
+      this.filteredSales = this.sales;
+    })
+    .catch(error => {
+      console.error('Error loading sales:', error);
+      alert('Failed to load sales data');
+    });
+  },
+
+
+    // async loadSales() {
+    //   try {
+    //     const db = await openSalesDB();
+    //     const sales = await getAllSales(db);
+    //     this.sales = sales;
+    //     this.filteredSales = this.sales;
+    //   } catch (error) {
+    //     console.error('Error loading sales:', error);
+    //   }
+    // },
+
+    searchSalesProduct() {
+      const query = this.searchTransactionNumber.trim().toLowerCase();
+
+      if (query === "") {
+        this.filteredSales = this.sales;
+      } else {
+        this.filteredSales = this.sales.filter((sale) => {
+          return sale.transactionNumber && sale.transactionNumber.toLowerCase().includes(query);
+        });
+      }
+      this.currentPage = 1;
+    },
+
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+
+    goToPage(page) {
+      this.currentPage = page;
+    },
+
+    viewSale(sale) {
+  // Calculate total if it's a multi-item sale
+  if (sale.items && Array.isArray(sale.items)) {
+    sale.totalAmount = sale.items.reduce((sum, item) => 
+      sum + parseFloat(item.amount || 0), 0
+    ).toFixed(2);
+  }
+  this.selectedSale = sale;
 },
 
 
 
 
-  async loadSales() {
-    try {
-      const db = await openSalesDB();
-      const sales = await getAllSales(db);
-      this.sales = sales;
-      this.filteredSales = this.sales;
-    } catch (error) {
-      console.error('Error loading sales:', error);
-    }
-  },
+    updateStatus(status) {
+      // Validate required fields
+      const hasEmptyFields = this.selectedSale.items.some(item => 
+        !item.item || !item.quantity || !item.unit_price || !item.amount
+      );
 
-  searchSalesProduct() {
-    const query = this.searchTransactionNumber.trim().toLowerCase();
-
-    if (query === "") {
-      this.filteredSales = this.sales;
-    } else {
-      this.filteredSales = this.sales.filter((sale) => {
-        return sale.transactionNumber && sale.transactionNumber.toLowerCase().includes(query);
-      });
-    }
-    this.currentPage = 1;
-  },
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-    }
-  },
-
-  prevPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-    }
-  },
-
-  goToPage(page) {
-    this.currentPage = page;
-  },
-
-  viewSale(sale) {
-    this.selectedSale = sale;
-  },
+      if (hasEmptyFields) {
+        alert("Invalid sale data: Missing required fields");
+        return;
+      }
 
 
+      // const totalAmount = this.items.reduce((sum, item) => 
+      //   sum + parseFloat(item.amount || 0), 0
+      // ).toFixed(2);
 
-
-  async updateStatus(status) {
-try {
-  const salesDB = await openSalesDB();
-  const productDB = await openDB();
-  const products = await getAllProducts(productDB);
-
-  // Handle both single and grouped sales
-  if (this.selectedSale.items) {
-    // Grouped sales case
     const updatedSale = {
-      ...this.selectedSale,
-      status: status,
+    ...this.selectedSale,
+    status: status,
+    // totalAmount: totalAmount,
       items: this.selectedSale.items.map(item => ({
-        ...item,
+        item: item.item,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        amount: item.amount,
         status: status
       }))
     };
 
-    if (status === 'Completed') {
-      // Validate and update inventory for all items
-      for (const item of updatedSale.items) {
-        const product = products.find(p => p.brandName === item.item);
-        if (!product) {
-          throw new Error(`Product not found: ${item.item}`);
+    console.log('Final Payload:', updatedSale);
+
+      // First update sale status
+      fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/sale/${this.selectedSale.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(updatedSale)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to update sale');
+        
+        // If status is Completed, update inventory
+        if (status === 'Completed') {
+          return Promise.all(updatedSale.items.map(item => 
+            // First fetch all products to get ID
+            fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products')
+              .then(response => response.json())
+              .then(products => {
+                console.log('All Products:', products.data);
+                // Find product by name
+                const product = products.data.find(p => p.brandName === item.item);
+                
+                if (!product) {
+                  throw new Error(`Product not found: ${item.item}`);
+                }
+                
+                console.log('Found Product:', product);
+                
+                // Calculate remaining inventory
+                const remainingInventory = parseInt(product.productInventory) - parseInt(item.quantity);
+                
+                if (remainingInventory < 0) {
+                  throw new Error(`Insufficient inventory for ${item.item}`);
+                }
+
+                // Update inventory using found product ID
+                return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${product.id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    productInventory: remainingInventory
+                  })
+                });
+              })
+          ));
         }
+      })
+      .then(() => {
+        this.loadSales();
+        alert(`Sale status updated to ${status}`);
+      })
+      .catch(error => {
+        console.error('Error updating sale status:', error);
+        alert(error.message || 'Failed to update sale status');
+      });
+    },
 
-        const newInventory = product.productInventory - item.quantity;
-        if (newInventory < 0) {
-          throw new Error(`Insufficient inventory for ${item.item}`);
-        }
 
-        product.productInventory = newInventory;
-        await updateProduct(productDB, product);
-      }
-    }
 
-    await updateSale(salesDB, updatedSale);
+    downloadExcel() {
+      const worksheetData = this.sales.map((sale) => ({
+        Item: sale.item,
+        SKU: sale.reference,
+        Status: sale.status,
+        Date: sale.created_at,
+        Amount: sale.amount,
+        Unit_Price: sale.unit_price,
+        Quantity: sale.quantity,
+        TransactionID: sale.transactionNumber,
+      }));
 
-  } else {
-    // Single sale case
-    const updatedSale = {
-      ...this.selectedSale,
-      status: status
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+      XLSX.writeFile(workbook, "SalesData.xlsx");
+    },
+
+
+
+
+
+    printReceipt(sale) {
+  try {
+    console.log('Print Data:', sale);
+    const calculatedTotal = sale.items ? 
+      sale.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2) : '0.00';
+
+    
+    const content = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            body { 
+              font-family: 'Courier New', monospace;
+              width: 80mm;
+              padding: 5mm;
+              margin: 0;
+              font-size: 12px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 10px;
+              border-bottom: 1px dashed #000;
+              padding-bottom: 10px;
+            }
+            .store-name {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            .receipt-details {
+              text-align: left;
+              margin: 10px 0;
+              border-bottom: 1px dashed #000;
+              padding-bottom: 10px;
+            }
+            .items-table {
+              width: 100%;
+              margin: 10px 0;
+              font-size: 12px;
+            }
+            .item-row td {
+              padding: 3px 0;
+            }
+            .amount {
+              text-align: right;
+            }
+            .total {
+              border-top: 1px dashed #000;
+              margin-top: 10px;
+              padding-top: 10px;
+              text-align: right;
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              font-size: 10px;
+              border-top: 1px dashed #000;
+              padding-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="store-name">ELECHI PERFUMERY</div>
+            <div>Your Fragrance Destination</div>
+            <div>Tel: +234 8163928936</div>
+            <div>19 Umuahia Road, Ikot Ekpene</div>
+
+          </div>
+          
+          <div class="receipt-details">
+            <div>Transaction ID: ${sale.transaction_number || sale.transactionNumber || 'N/A'}</div>
+            <div>Date: ${new Date(sale.created_at).toLocaleString()}</div>
+            <div>Status: ${sale.status}</div>
+          </div>
+
+          <table class="items-table">
+            <tr>
+              <td><strong>ITEM</strong></td>
+              <td><strong>QTY</strong></td>
+              <td class="amount"><strong>PRICE</strong></td>
+              <td class="amount"><strong>AMT</strong></td>
+            </tr>
+            ${sale.items ? sale.items.map(item => `
+              <tr class="item-row">
+                <td>${item.item}</td>
+                <td>${item.quantity}</td>
+                <td class="amount">₦${parseFloat(item.unit_price).toFixed(2)}</td>
+                <td class="amount">₦${parseFloat(item.amount).toFixed(2)}</td>
+              </tr>
+            `).join('') : ''}
+          </table>
+
+           <div class="total">
+        <div>SUBTOTAL: ₦${calculatedTotal}</div>
+        <div>TOTAL: ₦${calculatedTotal}</div>
+      </div>
+
+          <div class="footer">
+            <p>Thank you for shopping with us!</p>
+            <p>Please come again</p>
+            <p>**** END OF RECEIPT ****</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(content);
+    doc.close();
+
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow.print();
+        document.body.removeChild(iframe);
+      }, 500);
     };
-
-    if (status === 'Completed') {
-      const product = products.find(p => p.brandName === this.selectedSale.item);
-      if (!product) {
-        throw new Error(`Product not found: ${this.selectedSale.item}`);
-      }
-
-      const newInventory = product.productInventory - this.selectedSale.quantity;
-      if (newInventory < 0) {
-        throw new Error(`Insufficient inventory for ${this.selectedSale.item}`);
-      }
-
-      product.productInventory = newInventory;
-      await updateProduct(productDB, product);
-    }
-
-    await updateSale(salesDB, updatedSale);
+  } catch (error) {
+    console.error('Error printing receipt:', error);
+    console.error('Sale data:', sale);
+    alert('Failed to print receipt');
   }
-
-  await this.loadSales();
-  alert(`Sale status updated to ${status}`);
-
-} catch (error) {
-  console.error('Error updating sale status:', error);
-  alert(error.message || 'Failed to update sale status');
-}
 },
 
 
 
 
-downloadExcel() {
-    const worksheetData = this.sales.map((sale) => ({
-      Item: sale.item,
-      SKU: sale.reference,
-      Status: sale.status,
-      Date: sale.created_at,
-      Amount: sale.amount,
-      Unit_Price: sale.unit_price,
-      Quantity: sale.quantity,
-      TransactionID: sale.transactionNumber,
-    }));
 
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-    XLSX.writeFile(workbook, "SalesData.xlsx");
-  },
-
-
-    printReceipt(sale) {
-      try {
-        // Create iframe
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        
-        // Generate receipt content
-        const content = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Print Receipt</title>
-              <style>
-                body { 
-                  font-family: Arial; 
-                  padding: 20px;
-                  max-width: 400px;
-                  margin: auto;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                th, td {
-                  padding: 8px;
-                  text-align: left;
-                }
-                @media print {
-                  body { margin: 0; }
-                  @page { margin: 1cm; }
-                }
-              </style>
-            </head>
-            <body>
-              <div id="receipt">
-                <h2 style="text-align: center;">STORE RECEIPT</h2>
-                <p>Transaction ID: ${sale.transactionNumber}</p>
-                <p>Date: ${sale.created_at}</p>
-                <p>Status: ${sale.status}</p>
-                <hr>
-                <table>
-                  <tr>
-                    <th>Item</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th style="text-align: right;">Amount</th>
-                  </tr>
-                  ${sale.items ? 
-                    sale.items.map(item => `
-                      <tr>
-                        <td>${item.item}</td>
-                        <td>${item.unit_price}</td>
-                        <td>${item.quantity}</td>
-                        <td style="text-align: right;">${item.amount}</td>
-                      </tr>
-                    `).join('') :
-                    `<tr>
-                      <td>${sale.item}</td>
-                      <td>${sale.unit_price}</td>
-                      <td>${sale.quantity}</td>
-                      <td style="text-align: right;">${sale.amount}</td>
-                    </tr>`
-                  }
-                </table>
-                <hr>
-                <p style="text-align: right;">
-                  <strong>Total: ${sale.totalAmount || sale.amount}</strong>
-                </p>
-                <p style="text-align: center; margin-top: 30px;">
-                  Thank you for your business!
-                </p>
-              </div>
-            </body>
-          </html>
-        `;
-
-        // Write content to iframe and print
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(content);
-        doc.close();
-
-        iframe.onload = () => {
-          setTimeout(() => {
-            iframe.contentWindow.print();
-            document.body.removeChild(iframe);
-          }, 500);
-        };
-
-      } catch (error) {
-        console.error('Error printing receipt:', error);
-        alert('Failed to print receipt. Please try again.');
-      }
-    },
 
 
     downloadReceipt(sale) {
-      try {
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.width;
-        
-        // Header
-        doc.setFontSize(20);
-        doc.text("STORE RECEIPT", pageWidth/2, 20, { align: "center" });
-        
-        // Receipt info
-        doc.setFontSize(12);
-        doc.text(`Transaction ID: ${sale.transactionNumber}`, 20, 40);
-        doc.text(`Date: ${sale.created_at}`, 20, 50);
-        doc.text(`Status: ${sale.status}`, 20, 60);
-        
-        // Items table header
-        doc.setLineWidth(0.5);
-        doc.line(20, 70, pageWidth-20, 70);
-        doc.text("Item", 20, 80);
-        doc.text("Unit Price", 80, 80);
-        doc.text("Qty", 130, 80);
-        doc.text("Amount", 170, 80);
-        doc.line(20, 85, pageWidth-20, 85);
+  try {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Log sale object to debug
+    console.log('Sale Data:', sale);
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text("STORE RECEIPT", pageWidth/2, 20, { align: "center" });
+    
+    // Receipt info with total amount and transaction number
+    doc.setFontSize(12);
+    doc.text(`Transaction ID: ${sale.transactionNumber || 'N/A'}`, 20, 40);
+    doc.text(`Date: ${sale.created_at}`, 20, 50);
+    doc.text(`Status: ${sale.status}`, 20, 60);
+    doc.text(`Total Amount: ₦${parseFloat(sale.totalAmount || 0).toFixed(2)}`, 20, 70);
 
-        let yPos = 95;
+    // Items table header
+    doc.setLineWidth(0.5);
+    doc.line(20, 80, pageWidth-20, 80);
+    doc.text("Item", 20, 90);
+    doc.text("Unit Price", 80, 90);
+    doc.text("Qty", 130, 90);
+    doc.text("Amount", 170, 90);
+    doc.line(20, 95, pageWidth-20, 95);
 
-        // Handle multiple items
-        if (sale.items && Array.isArray(sale.items)) {
-          sale.items.forEach(item => {
-            doc.text(item.item?.toString() || '', 20, yPos);
-            doc.text(item.unit_price?.toString() || '', 80, yPos);
-            doc.text(item.quantity?.toString() || '', 130, yPos);
-            doc.text(item.amount?.toString() || '', 170, yPos);
-            yPos += 10;
-          });
-        } 
-        // Handle single item
-        else {
-          doc.text(sale.item?.toString() || '', 20, yPos);
-          doc.text(sale.unit_price?.toString() || '', 80, yPos);
-          doc.text(sale.quantity?.toString() || '', 130, yPos);
-          doc.text(sale.amount?.toString() || '', 170, yPos);
-        }
+    // ...existing code...
+  } catch (error) {
+    console.error('Error generating receipt:', error);
+    alert('Failed to generate receipt');
+  }
+},
 
-        // Total
-        doc.line(20, yPos+5, pageWidth-20, yPos+5);
-        doc.setFont(undefined, 'bold');
-        doc.text("Total Amount:", 130, yPos+15);
-        doc.text(sale.totalAmount || sale.amount || '0.00', 170, yPos+15);
-        
-        // Footer
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        doc.text("Thank you for your business!", pageWidth/2, yPos+35, { align: "center" });
+  }
 
-        doc.save(`${sale.transactionNumber}_Receipt.pdf`);
-      } catch (error) {
-        console.error('Error generating receipt:', error);
-        alert('Failed to generate receipt');
-      }
-    },
-
-
-}
 });
 
 

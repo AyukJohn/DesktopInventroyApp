@@ -8,29 +8,28 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="collapsibleNavId">
-        <ul class="navbar-nav mt-2 mt-lg-0">
+        <ul class="navbar-nav mt-2 mt-lg-0 ">
           <router-link to="/" class="nav-link ms-3">
             <span><img src="/tabler_smart-home.svg" alt="" /></span>
             <span class="pt-1 ps-2">Home</span>
           </router-link>
 
-          <router-link to="/wholeandretail" class="nav-link ms-2">
+          <!-- <router-link to="/wholeandretail" class="nav-link ms-2">
             <span><img src="/material-symbols_add-business-outline-rounded.svg" alt="" /></span>
             <span class="pt-1 ps-2">WholeSale</span>
-          </router-link>
+          </router-link> -->
 
-          <router-link to="/inventory" class="nav-link ms-2">
+          <router-link to="/inventory" class="nav-link ms-5">
             <span><img src="/tabler_layout-dashboard.svg" alt="" /></span>
-            <span class="pt-1 ps-2">Retail</span>
+            <span class="pt-1 ps-2">WholeSale/Retail</span>
           </router-link>
 
-          <router-link to="/salesmanagement" class="nav-link ms-2">
+          <router-link to="/salesmanagement" class="nav-link ms-5">
             <span><img src="/sale-tag-01.svg" alt="" /></span>
             <span class="pt-1 ps-2">Sales and Orders</span>
           </router-link>
 
-          <router-link v-if="name === 'Admin'" to="/analytics" class="nav-link ms-2">
-
+          <router-link v-if="name === 'Admin'" to="/analytics" class="nav-link ms-5">
             <span><img src="/chart-bar-line.svg" alt="" /></span>
             <span class="pt-1 ps-2">Analytics</span>
           </router-link>
@@ -40,7 +39,7 @@
           </span> -->
 
           <!-- Dropdown button for name and logout -->
-          <div class="dropdown">
+          <div class="dropdown ms-5">
             <button class="btn1" @click="toggleDropdown">
               <span>{{ name }}</span>
               <span><img src="/tabler_user-filled.svg" alt="" /></span>

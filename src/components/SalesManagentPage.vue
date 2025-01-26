@@ -109,7 +109,7 @@
                         (sale.items ? sale.items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2) : '0.00') }}
                     </td>
 
-                    <td>{{ sale.transactionNumber }}</td>
+                    <td>{{ sale.transaction_number }}</td>
                     <td class="ms-5 pt-4">
                         <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span>
                         <span><img src="/downloadicon.svg" alt="" class="ps-3"  @click="downloadReceipt(sale)"  style="cursor: pointer;"></span>
@@ -240,8 +240,14 @@
                               </div>
 
                               <!-- Total Amount -->
+                            <!-- filepath: /home/backend_dev/Javascript/invent/invent-frontend/src/components/SalesManagentPage.vue -->
+                              <!-- Total Amount -->
                               <div class="text-dark text-end mt-4">
-                                <h5>Total Amount: {{ selectedSale.totalAmount || selectedSale.amount }}</h5>
+                                <h5>Total Amount: ₦{{ 
+                                  selectedSale.items ? 
+                                  selectedSale.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2) : 
+                                  parseFloat(selectedSale.amount || 0).toFixed(2) 
+                                }}</h5>
                               </div>
                             </form>
 
@@ -490,8 +496,8 @@
 <script>
 
 import { defineComponent, onMounted, ref, watch, nextTick } from 'vue';
-import { openSalesDB, getAllSales, addSale, updateSale } from '../utils/salesDB';
-import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
+import { openSalesDB, getAllSales,  } from '../utils/salesDB';
+// import { openDB, getAllProducts, updateProduct } from '../utils/indexDB';
 
 import Chart from 'chart.js/auto';
 import moment from 'moment';
@@ -513,12 +519,15 @@ export default defineComponent({
       selectedSale: {},
       searchTransactionNumber: "",
       isAdmin: false,
+      // product_id:"",
 
        items: [{
         name: '',
         unitPrice: '',
         quantity: '',
-        amount: ''
+        amount: '',
+        product_id: '',
+        'transactionNumber': '',
     }]
     };
   },
@@ -530,125 +539,11 @@ export default defineComponent({
     const hasData = ref(false);
 
 
-    
-    const fetchData = async () => {
-  try {
-    const db = await openSalesDB();
-    const sales = await getAllSales(db);
-    
-    // Initialize default values
-    hasData.value = false;
-    const salesData = ref([]);
-    const bestSellingProduct = ref(null);
-    const leastSellingProduct = ref(null);
-    leastSellingProduct.value = null;
-    revenue.value = '0.00';
+  
 
-    // Validate sales data
-    if (Array.isArray(sales) && sales.length > 0) {
-      hasData.value = true;
-      salesData.value = sales;
-
-      const productSales = {};
-      let totalSales = 0;
-
-      // Safe iteration over sales
-      sales.forEach(sale => {
-        // Verify sale has items array
-        if (sale?.status === 'Completed' && Array.isArray(sale?.items)) {
-          sale.items.forEach(item => {
-            if (item?.item) { // Verify item exists and has name
-              const itemName = item.item;
-              const itemAmount = parseFloat(item.amount) || 0;
-              const itemQuantity = parseInt(item.quantity) || 0;
-
-              productSales[itemName] = productSales[itemName] || {
-                amount: 0,
-                quantity: 0
-              };
-
-              productSales[itemName].amount += itemAmount;
-              productSales[itemName].quantity += itemQuantity;
-              totalSales += itemAmount;
-            }
-          });
-        }
-      });
-
-      const sortedProducts = Object.entries(productSales);
-      if (sortedProducts.length > 0) {
-        sortedProducts.sort((a, b) => b[1].quantity - a[1].quantity);
-        
-        bestSellingProduct.value = {
-          name: sortedProducts[0][0],
-          quantity: sortedProducts[0][1].quantity,
-          percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
-        };
-
-        leastSellingProduct.value = {
-          name: sortedProducts[sortedProducts.length - 1][0],
-          quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
-          percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
-        };
-
-        revenue.value = totalSales.toFixed(2);
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching sales data:', error);
-  }
-};
-    
-
-    const initializeCharts = (sales) => {
-
-  nextTick(() => {
-    const months = moment.months();
-    const salesByMonth = months.reduce((acc, month) => {
-      acc[month] = 0;
-      return acc;
-    }, {});
-
-    // Process grouped sales data for chart
-    sales.forEach(sale => {
-      if (sale.status === 'Completed' && sale.items) {
-        const month = moment(sale.created_at, 'DD/MM/YYYY, HH:mm:ss').format('MMMM');
-        const totalAmount = sale.items.reduce((sum, item) => 
-          sum + parseFloat(item.amount || 0), 0
-        );
-        salesByMonth[month] += totalAmount;
-      }
-    });
-
-    const ctx = document.getElementById('salesChart');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: months,
-        datasets: [{
-          label: 'Monthly Sales',
-          data: months.map(month => salesByMonth[month]),
-          backgroundColor: 'rgba(68, 155, 82, 1)',
-          borderWidth: 1,
-          borderRadius: 15,
-          barThickness: 13
-        }]
-      },
-      options: {
-        scales: {
-          x: { grid: { display: false } },
-          y: { grid: { display: false } }
-        }
-      }
-    });
-  });
-
-
-    };
-    
 
     onMounted(() => {
-      fetchData();
+      // fetchData();
     });
 
     watch([bestSellingProduct, leastSellingProduct], () => {
@@ -743,116 +638,164 @@ export default defineComponent({
       item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
     },
 
-
-    async fetchUnitPrice(index) {
-      try {
-        const db = await openDB()
-        const products = await getAllProducts(db)
-
-        const product = products.find(p => p.brandName === this.items[index].item)
-
-        
-        if (product) {
-          this.items[index].unit_price = product.sellingPrice
-          this.calculateAmount(index)
+    fetchUnitPrice(index) {
+      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         }
-      } catch (error) {
-        console.error('Error fetching unit price:', error)
-      }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch products');
+        return response.json();
+      })
+      .then(products => {
+        const product = products.data.find(p => p.brandName === this.items[index].item);
+        if (product) {
+          this.items[index].unit_price = product.sellingPrice;
+          this.items[index].product_id = product.id; // Store ID per item
+          this.calculateAmount(index);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching unit price:', error);
+      });
     },
 
 
 
-    async saveProductSales(status){
+    saveProductSales(status) {
+  const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
+  const transactionNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
 
-  try {
-    const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
-    const transactionNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
-    const salesDB = await openSalesDB();
-    const productDB = await openDB();
+  const totalAmount = this.items.reduce((sum, item) => 
+    sum + parseFloat(item.amount || 0), 0
+  ).toFixed(2);
 
-    // Calculate total amount for all items
-    const totalAmount = this.items.reduce((sum, item) => 
-      sum + parseFloat(item.amount || 0), 0
-    ).toFixed(2);
+  const groupedSale = {
+    reference: referenceNumber,
+    transactionNumber: transactionNumber,
+    status: status,
+    totalAmount: totalAmount,
+    items: this.items.map(item => ({
+      item: item.item,
+      unit_price: item.unit_price,
+      quantity: item.quantity,
+      amount: item.amount
+    }))
+  };
 
-    // Create grouped sale record
-    const groupedSale = {
-      reference: referenceNumber,
-      transactionNumber: transactionNumber,
-      status: status,
-      created_at: new Date().toLocaleString(),
-      totalAmount: totalAmount,
-      items: this.items.map(item => ({
-        item: item.item,
-        unit_price: item.unit_price,
-        quantity: item.quantity,
-        amount: item.amount
-      }))
-    };
+  const hasEmptyFields = this.items.some(item => 
+    !item.item || !item.unit_price || !item.quantity || !item.amount
+  );
 
-    const hasEmptyFields = this.items.some(item => 
-      !item.item || !item.unit_price || !item.quantity || !item.amount
-    );
+  if (hasEmptyFields) {
+    alert("Please fill in all required fields");
+    return;
+  }
 
-    if (hasEmptyFields) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    console.log(groupedSale);
+  console.log(groupedSale);
+  
+  // First save the sale
+  fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSale', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept':'application/json'
+    },
+    body: JSON.stringify(groupedSale)
+  })
+  .then(response => {
+    // console.log(response.status !== 201);
     
-
-    // Update inventory for all items if status is Completed
+    if (response.status !== 201) throw new Error('Failed to save sale');
+    
+    // If status is Completed, update inventory
     if (status === 'Completed') {
-      const products = await getAllProducts(productDB);
+      return Promise.all(this.items.map(item => 
       
-      for (const item of this.items) {
-        const product = products.find(p => p.brandName === item.item);
-        if (product) {
-          const newQuantity = product.productInventory - parseInt(item.quantity);
-          if (newQuantity < 0) {
-            throw new Error(`Insufficient inventory for ${item.item}`);
-          }
-          product.productInventory = newQuantity;
-          await updateProduct(productDB, product);
-        }
-      }
+      // First fetch current inventory
+      fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${item.product_id}`)
+      .then(response => response.json())
+      .then(product => {
+        const productData = product.data;
+        
+
+        const remainingInventory = parseInt(productData.productInventory) - parseInt(item.quantity);
+        
+
+            if (remainingInventory < 0) {
+              throw new Error(`Insufficient inventory for ${item.item}`);
+            }
+            
+
+            // Update with remaining inventory
+            return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${item.product_id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({
+                productInventory: remainingInventory
+              })
+            });
+          })
+      ));
     }
 
-    // // Save grouped sale record
-    await addSale(salesDB, groupedSale);
-
-    // Reset form
+  })
+  .then(() => {
     this.items = [{
       item: '',
       unit_price: '',
       quantity: '',
       amount: ''
     }];
-
-    alert('Sales transaction completed successfully');
+    // alert('Sales transaction completed successfully');
     window.location.reload();
-
-  } catch (error) {
+  })
+  .catch(error => {
     console.error('Error saving sales:', error);
-    alert(`Failed to save sales: ${error.message}`);
-  }
+    // alert(`Failed to save sales: ${error.message}`);
+  });
 },
 
 
 
-
-    async loadSales() {
-      try {
-        const db = await openSalesDB();
-        const sales = await getAllSales(db);
-        this.sales = sales;
-        this.filteredSales = this.sales;
-      } catch (error) {
-        console.error('Error loading sales:', error);
+  loadSales() {
+    fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
-    },
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to fetch sales');
+      return response.json();
+    })
+    .then(data => {
+      this.sales = data.data;
+      this.filteredSales = this.sales;
+    })
+    .catch(error => {
+      console.error('Error loading sales:', error);
+      alert('Failed to load sales data');
+    });
+  },
+
+
+    // async loadSales() {
+    //   try {
+    //     const db = await openSalesDB();
+    //     const sales = await getAllSales(db);
+    //     this.sales = sales;
+    //     this.filteredSales = this.sales;
+    //   } catch (error) {
+    //     console.error('Error loading sales:', error);
+    //   }
+    // },
 
     searchSalesProduct() {
       const query = this.searchTransactionNumber.trim().toLowerCase();
@@ -884,22 +827,21 @@ export default defineComponent({
     },
 
     viewSale(sale) {
-      this.selectedSale = sale;
-    },
+  // Calculate total if it's a multi-item sale
+  if (sale.items && Array.isArray(sale.items)) {
+    sale.totalAmount = sale.items.reduce((sum, item) => 
+      sum + parseFloat(item.amount || 0), 0
+    ).toFixed(2);
+  }
+  this.selectedSale = sale;
+},
 
 
 
 
-    async updateStatus(status) {
-  try {
-    const salesDB = await openSalesDB();
-    const productDB = await openDB();
-    const products = await getAllProducts(productDB);
-
-
-
-     // Validate required fields in items
-     const hasEmptyFields = this.selectedSale.items.some(item => 
+    updateStatus(status) {
+      // Validate required fields
+      const hasEmptyFields = this.selectedSale.items.some(item => 
         !item.item || !item.quantity || !item.unit_price || !item.amount
       );
 
@@ -908,71 +850,86 @@ export default defineComponent({
         return;
       }
 
-    // Handle both single and grouped sales
-    if (this.selectedSale.items) {
-      // Grouped sales case
-      const updatedSale = {
-        ...this.selectedSale,
-        status: status,
-        items: this.selectedSale.items.map(item => ({
-          ...item,
-          status: status
-        }))
-      };
 
-      if (status === 'Completed') {
-        // Validate and update inventory for all items
-        for (const item of updatedSale.items) {
-          const product = products.find(p => p.brandName === item.item);
-          if (!product) {
-            throw new Error(`Product not found: ${item.item}`);
-          }
+      // const totalAmount = this.items.reduce((sum, item) => 
+      //   sum + parseFloat(item.amount || 0), 0
+      // ).toFixed(2);
 
-          const newInventory = product.productInventory - item.quantity;
-          if (newInventory < 0) {
-            throw new Error(`Insufficient inventory for ${item.item}`);
-          }
-
-          product.productInventory = newInventory;
-          await updateProduct(productDB, product);
-        }
-      }
-
-      await updateSale(salesDB, updatedSale);
-
-    } else {
-      // Single sale case
-      const updatedSale = {
-        ...this.selectedSale,
+    const updatedSale = {
+    ...this.selectedSale,
+    status: status,
+    // totalAmount: totalAmount,
+      items: this.selectedSale.items.map(item => ({
+        item: item.item,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        amount: item.amount,
         status: status
-      };
+      }))
+    };
 
-      if (status === 'Completed') {
-        const product = products.find(p => p.brandName === this.selectedSale.item);
-        if (!product) {
-          throw new Error(`Product not found: ${this.selectedSale.item}`);
+    console.log('Final Payload:', updatedSale);
+
+      // First update sale status
+      fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/sale/${this.selectedSale.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(updatedSale)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to update sale');
+        
+        // If status is Completed, update inventory
+        if (status === 'Completed') {
+          return Promise.all(updatedSale.items.map(item => 
+            // First fetch all products to get ID
+            fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products')
+              .then(response => response.json())
+              .then(products => {
+                console.log('All Products:', products.data);
+                // Find product by name
+                const product = products.data.find(p => p.brandName === item.item);
+                
+                if (!product) {
+                  throw new Error(`Product not found: ${item.item}`);
+                }
+                
+                console.log('Found Product:', product);
+                
+                // Calculate remaining inventory
+                const remainingInventory = parseInt(product.productInventory) - parseInt(item.quantity);
+                
+                if (remainingInventory < 0) {
+                  throw new Error(`Insufficient inventory for ${item.item}`);
+                }
+
+                // Update inventory using found product ID
+                return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${product.id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    productInventory: remainingInventory
+                  })
+                });
+              })
+          ));
         }
-
-        const newInventory = product.productInventory - this.selectedSale.quantity;
-        if (newInventory < 0) {
-          throw new Error(`Insufficient inventory for ${this.selectedSale.item}`);
-        }
-
-        product.productInventory = newInventory;
-        await updateProduct(productDB, product);
-      }
-
-      await updateSale(salesDB, updatedSale);
-    }
-
-    await this.loadSales();
-    alert(`Sale status updated to ${status}`);
-
-  } catch (error) {
-    console.error('Error updating sale status:', error);
-    alert(error.message || 'Failed to update sale status');
-  }
-},
+      })
+      .then(() => {
+        this.loadSales();
+        alert(`Sale status updated to ${status}`);
+      })
+      .catch(error => {
+        console.error('Error updating sale status:', error);
+        alert(error.message || 'Failed to update sale status');
+      });
+    },
 
 
 
@@ -999,101 +956,135 @@ export default defineComponent({
 
 
     printReceipt(sale) {
-      try {
-        // Create iframe
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        
-        // Generate receipt content
-        const content = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Print Receipt</title>
-              <style>
-                body { 
-                  font-family: Arial; 
-                  padding: 20px;
-                  max-width: 400px;
-                  margin: auto;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                th, td {
-                  padding: 8px;
-                  text-align: left;
-                }
-                @media print {
-                  body { margin: 0; }
-                  @page { margin: 1cm; }
-                }
-              </style>
-            </head>
-            <body>
-              <div id="receipt">
-                <h2 style="text-align: center;">STORE RECEIPT</h2>
-                <p>Transaction ID: ${sale.transactionNumber}</p>
-                <p>Date: ${sale.created_at}</p>
-                <p>Status: ${sale.status}</p>
-                <hr>
-                <table>
-                  <tr>
-                    <th>Item</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th style="text-align: right;">Amount</th>
-                  </tr>
-                  ${sale.items ? 
-                    sale.items.map(item => `
-                      <tr>
-                        <td>${item.item}</td>
-                        <td>${item.unit_price}</td>
-                        <td>${item.quantity}</td>
-                        <td style="text-align: right;">${item.amount}</td>
-                      </tr>
-                    `).join('') :
-                    `<tr>
-                      <td>${sale.item}</td>
-                      <td>${sale.unit_price}</td>
-                      <td>${sale.quantity}</td>
-                      <td style="text-align: right;">${sale.amount}</td>
-                    </tr>`
-                  }
-                </table>
-                <hr>
-                <p style="text-align: right;">
-                  <strong>Total: ${sale.totalAmount || sale.amount}</strong>
-                </p>
-                <p style="text-align: center; margin-top: 30px;">
-                  Thank you for your business!
-                </p>
-              </div>
-            </body>
-          </html>
-        `;
+  try {
+    console.log('Print Data:', sale);
+    const calculatedTotal = sale.items ? 
+      sale.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2) : '0.00';
 
-        // Write content to iframe and print
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(content);
-        doc.close();
+    
+    const content = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            body { 
+              font-family: 'Courier New', monospace;
+              width: 80mm;
+              padding: 5mm;
+              margin: 0;
+              font-size: 12px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 10px;
+              border-bottom: 1px dashed #000;
+              padding-bottom: 10px;
+            }
+            .store-name {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            .receipt-details {
+              text-align: left;
+              margin: 10px 0;
+              border-bottom: 1px dashed #000;
+              padding-bottom: 10px;
+            }
+            .items-table {
+              width: 100%;
+              margin: 10px 0;
+              font-size: 12px;
+            }
+            .item-row td {
+              padding: 3px 0;
+            }
+            .amount {
+              text-align: right;
+            }
+            .total {
+              border-top: 1px dashed #000;
+              margin-top: 10px;
+              padding-top: 10px;
+              text-align: right;
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              font-size: 10px;
+              border-top: 1px dashed #000;
+              padding-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="store-name">ELECHI PERFUMERY</div>
+            <div>Your Fragrance Destination</div>
+            <div>Tel: +234 8163928936</div>
+            <div>19 Umuahia Road, Ikot Ekpene</div>
 
-        iframe.onload = () => {
-          setTimeout(() => {
-            iframe.contentWindow.print();
-            document.body.removeChild(iframe);
-          }, 500);
-        };
+          </div>
+          
+          <div class="receipt-details">
+            <div>Transaction ID: ${sale.transaction_number || sale.transactionNumber || 'N/A'}</div>
+            <div>Date: ${new Date(sale.created_at).toLocaleString()}</div>
+            <div>Status: ${sale.status}</div>
+          </div>
 
-      } catch (error) {
-        console.error('Error printing receipt:', error);
-        alert('Failed to print receipt. Please try again.');
-      }
-    },
+          <table class="items-table">
+            <tr>
+              <td><strong>ITEM</strong></td>
+              <td><strong>QTY</strong></td>
+              <td class="amount"><strong>PRICE</strong></td>
+              <td class="amount"><strong>AMT</strong></td>
+            </tr>
+            ${sale.items ? sale.items.map(item => `
+              <tr class="item-row">
+                <td>${item.item}</td>
+                <td>${item.quantity}</td>
+                <td class="amount">₦${parseFloat(item.unit_price).toFixed(2)}</td>
+                <td class="amount">₦${parseFloat(item.amount).toFixed(2)}</td>
+              </tr>
+            `).join('') : ''}
+          </table>
 
+           <div class="total">
+        <div>SUBTOTAL: ₦${calculatedTotal}</div>
+        <div>TOTAL: ₦${calculatedTotal}</div>
+      </div>
+
+          <div class="footer">
+            <p>Thank you for shopping with us!</p>
+            <p>Please come again</p>
+            <p>**** END OF RECEIPT ****</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(content);
+    doc.close();
+
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow.print();
+        document.body.removeChild(iframe);
+      }, 500);
+    };
+  } catch (error) {
+    console.error('Error printing receipt:', error);
+    console.error('Sale data:', sale);
+    alert('Failed to print receipt');
+  }
+},
 
 
 
@@ -1102,68 +1093,42 @@ export default defineComponent({
 
 
     downloadReceipt(sale) {
-      try {
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.width;
-        
-        // Header
-        doc.setFontSize(20);
-        doc.text("STORE RECEIPT", pageWidth/2, 20, { align: "center" });
-        
-        // Receipt info
-        doc.setFontSize(12);
-        doc.text(`Transaction ID: ${sale.transactionNumber}`, 20, 40);
-        doc.text(`Date: ${sale.created_at}`, 20, 50);
-        doc.text(`Status: ${sale.status}`, 20, 60);
-        
-        // Items table header
-        doc.setLineWidth(0.5);
-        doc.line(20, 70, pageWidth-20, 70);
-        doc.text("Item", 20, 80);
-        doc.text("Unit Price", 80, 80);
-        doc.text("Qty", 130, 80);
-        doc.text("Amount", 170, 80);
-        doc.line(20, 85, pageWidth-20, 85);
+  try {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Log sale object to debug
+    console.log('Sale Data:', sale);
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text("STORE RECEIPT", pageWidth/2, 20, { align: "center" });
+    
+    // Receipt info with total amount and transaction number
+    doc.setFontSize(12);
+    doc.text(`Transaction ID: ${sale.transactionNumber || 'N/A'}`, 20, 40);
+    doc.text(`Date: ${sale.created_at}`, 20, 50);
+    doc.text(`Status: ${sale.status}`, 20, 60);
+    doc.text(`Total Amount: ₦${parseFloat(sale.totalAmount || 0).toFixed(2)}`, 20, 70);
 
-        let yPos = 95;
+    // Items table header
+    doc.setLineWidth(0.5);
+    doc.line(20, 80, pageWidth-20, 80);
+    doc.text("Item", 20, 90);
+    doc.text("Unit Price", 80, 90);
+    doc.text("Qty", 130, 90);
+    doc.text("Amount", 170, 90);
+    doc.line(20, 95, pageWidth-20, 95);
 
-        // Handle multiple items
-        if (sale.items && Array.isArray(sale.items)) {
-          sale.items.forEach(item => {
-            doc.text(item.item?.toString() || '', 20, yPos);
-            doc.text(item.unit_price?.toString() || '', 80, yPos);
-            doc.text(item.quantity?.toString() || '', 130, yPos);
-            doc.text(item.amount?.toString() || '', 170, yPos);
-            yPos += 10;
-          });
-        } 
-        // Handle single item
-        else {
-          doc.text(sale.item?.toString() || '', 20, yPos);
-          doc.text(sale.unit_price?.toString() || '', 80, yPos);
-          doc.text(sale.quantity?.toString() || '', 130, yPos);
-          doc.text(sale.amount?.toString() || '', 170, yPos);
-        }
-
-        // Total
-        doc.line(20, yPos+5, pageWidth-20, yPos+5);
-        doc.setFont(undefined, 'bold');
-        doc.text("Total Amount:", 130, yPos+15);
-        doc.text(sale.totalAmount || sale.amount || '0.00', 170, yPos+15);
-        
-        // Footer
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        doc.text("Thank you for your business!", pageWidth/2, yPos+35, { align: "center" });
-
-        doc.save(`${sale.transactionNumber}_Receipt.pdf`);
-      } catch (error) {
-        console.error('Error generating receipt:', error);
-        alert('Failed to generate receipt');
-      }
-    },
+    // ...existing code...
+  } catch (error) {
+    console.error('Error generating receipt:', error);
+    alert('Failed to generate receipt');
+  }
+},
 
   }
+
 });
 
 

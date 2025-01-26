@@ -26,108 +26,11 @@ if (indexedDB.databases) {
 
 
 
-export default defineComponent({
-  // ...existing code...
-  
-  methods: {
-    // ...existing code...
-    
-    printReceipt(sale) {
-      try {
-        // Create iframe
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        
-        // Generate receipt content
-        const content = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Print Receipt</title>
-              <style>
-                body { 
-                  font-family: Arial; 
-                  padding: 20px;
-                  max-width: 400px;
-                  margin: auto;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                th, td {
-                  padding: 8px;
-                  text-align: left;
-                }
-                @media print {
-                  body { margin: 0; }
-                  @page { margin: 1cm; }
-                }
-              </style>
-            </head>
-            <body>
-              <div id="receipt">
-                <h2 style="text-align: center;">STORE RECEIPT</h2>
-                <p>Transaction ID: ${sale.transactionNumber}</p>
-                <p>Date: ${sale.created_at}</p>
-                <p>Status: ${sale.status}</p>
-                <hr>
-                <table>
-                  <tr>
-                    <th>Item</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th style="text-align: right;">Amount</th>
-                  </tr>
-                  ${sale.items ? 
-                    sale.items.map(item => `
-                      <tr>
-                        <td>${item.item}</td>
-                        <td>${item.unit_price}</td>
-                        <td>${item.quantity}</td>
-                        <td style="text-align: right;">${item.amount}</td>
-                      </tr>
-                    `).join('') :
-                    `<tr>
-                      <td>${sale.item}</td>
-                      <td>${sale.unit_price}</td>
-                      <td>${sale.quantity}</td>
-                      <td style="text-align: right;">${sale.amount}</td>
-                    </tr>`
-                  }
-                </table>
-                <hr>
-                <p style="text-align: right;">
-                  <strong>Total: ${sale.totalAmount || sale.amount}</strong>
-                </p>
-                <p style="text-align: center; margin-top: 30px;">
-                  Thank you for your business!
-                </p>
-              </div>
-            </body>
-          </html>
-        `;
 
-        // Write content to iframe and print
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(content);
-        doc.close();
 
-        iframe.onload = () => {
-          setTimeout(() => {
-            iframe.contentWindow.print();
-            document.body.removeChild(iframe);
-          }, 500);
-        };
 
-      } catch (error) {
-        console.error('Error printing receipt:', error);
-        alert('Failed to print receipt. Please try again.');
-      }
-    },
 
-    // ...existing code...
-  }
-});
+   <div>
+    <h4>Dashboard</h4>
+    <h6>List of sales made on the platform</h6>
+  </div>
