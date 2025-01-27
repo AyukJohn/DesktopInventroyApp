@@ -1034,108 +1034,126 @@ export default defineComponent({
     printReceipt(sale) {
   try {
     console.log('Print Data:', sale);
-    const calculatedTotal = sale.items ? 
-      sale.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2) : '0.00';
+    const calculatedTotal = sale.items
+      ? sale.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2)
+      : '0.00';
 
-    
     const content = `
       <!DOCTYPE html>
       <html>
         <head>
           <style>
             @page { size: 80mm auto; margin: 0; }
-            body { 
-              font-family: 'Courier New', monospace;
-              width: 80mm;
-              padding: 5mm;
+            html, body {
               margin: 0;
+              padding: 0;
+              height: 100%;
+              font-family: 'Courier New', monospace;
               font-size: 12px;
+              box-sizing: border-box;
+            }
+            .receipt {
+              width: 80mm;
+              margin: 0 auto; /* Center horizontally */
+              padding: 5mm;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start; /* Align content to the top */
+              align-items: center; /* Center content vertically in the receipt */
+            }
+            .header, .footer {
+              margin-bottom: 10px;
             }
             .header {
-              text-align: center;
-              margin-bottom: 10px;
               border-bottom: 1px dashed #000;
-              padding-bottom: 10px;
+              padding-bottom: 5px;
             }
             .store-name {
-              font-size: 18px;
+              font-size: 16px;
               font-weight: bold;
-              margin-bottom: 5px;
             }
             .receipt-details {
-              text-align: left;
               margin: 10px 0;
               border-bottom: 1px dashed #000;
-              padding-bottom: 10px;
+              padding-bottom: 5px;
             }
             .items-table {
               width: 100%;
               margin: 10px 0;
-              font-size: 12px;
+              border-collapse: collapse;
+            }
+            .items-table th, .items-table td {
+              text-align: center;
+            }
+            .items-table tr {
+              border-bottom: 1px dashed #000;
             }
             .item-row td {
-              padding: 3px 0;
-            }
-            .amount {
-              text-align: right;
+              padding: 5px 0;
             }
             .total {
               border-top: 1px dashed #000;
-              margin-top: 10px;
               padding-top: 10px;
-              text-align: right;
               font-weight: bold;
+              text-align: center;
             }
             .footer {
-              margin-top: 20px;
-              text-align: center;
-              font-size: 10px;
               border-top: 1px dashed #000;
-              padding-top: 10px;
+              padding-top: 5px;
+              font-size: 10px;
+              text-align: center;
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <div class="store-name">ELECHI PERFUMERY</div>
-            <div>Your Fragrance Destination</div>
-            <div>Tel: +234 8163928936</div>
-            <div>19 Umuahia Road, Ikot Ekpene</div>
+          <div class="receipt">
+            <div class="header">
+              <div class="store-name">ELECHI PERFUMERY</div>
+              <div>Your Fragrance Destination</div>
+              <div>Tel: +234 8163928936</div>
+              <div>19 Umuahia Road, Ikot Ekpene</div>
+            </div>
 
-          </div>
-          
-          <div class="receipt-details">
-            <div>Transaction ID: ${sale.transaction_number || sale.transactionNumber || 'N/A'}</div>
-            <div>Date: ${new Date(sale.created_at).toLocaleString()}</div>
-            <div>Status: ${sale.status}</div>
-          </div>
+            <div class="receipt-details">
+              <div>Transaction ID: ${sale.transaction_number || sale.transactionNumber || 'N/A'}</div>
+              <div>Date: ${new Date(sale.created_at).toLocaleString()}</div>
+              <div>Status: ${sale.status}</div>
+            </div>
 
-          <table class="items-table">
-            <tr>
-              <td><strong>ITEM</strong></td>
-              <td><strong>QTY</strong></td>
-              <td class="amount"><strong>PRICE</strong></td>
-              <td class="amount"><strong>AMT</strong></td>
-            </tr>
-            ${sale.items ? sale.items.map(item => `
-              <tr class="item-row">
-                <td>${item.item}</td>
-                <td>${item.quantity}</td>
-                <td class="amount">₦${parseFloat(item.unit_price).toFixed(2)}</td>
-                <td class="amount">₦${parseFloat(item.amount).toFixed(2)}</td>
-              </tr>
-            `).join('') : ''}
-          </table>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>ITEM</th>
+                  <th>QTY</th>
+                  <th>PRICE</th>
+                  <th>AMT</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sale.items
+                  ? sale.items.map(item => `
+                    <tr class="item-row">
+                      <td>${item.item}</td>
+                      <td>${item.quantity}</td>
+                      <td>₦${parseFloat(item.unit_price).toFixed(2)}</td>
+                      <td>₦${parseFloat(item.amount).toFixed(2)}</td>
+                    </tr>
+                  `).join('')
+                  : ''}
+              </tbody>
+            </table>
 
-           <div class="total">
-        <div>SUBTOTAL: ₦${calculatedTotal}</div>
-        <div>TOTAL: ₦${calculatedTotal}</div>
-      </div>
+            <div class="total">
+              <div>SUBTOTAL: ₦${calculatedTotal}</div>
+              <div>TOTAL: ₦${calculatedTotal}</div>
+            </div>
 
-          <div class="footer">
-            <p>Thank you for shopping with us!</p>
-            <p>Please come again</p>
-            <p>**** END OF RECEIPT ****</p>
+            <div class="footer">
+              <p>Thank you for shopping with us!</p>
+              <p>Please come again</p>
+              <p>**** END OF RECEIPT ****</p>
+            </div>
           </div>
         </body>
       </html>
@@ -1161,7 +1179,6 @@ export default defineComponent({
     alert('Failed to print receipt');
   }
 },
-
 
 
 
