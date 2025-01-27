@@ -520,14 +520,17 @@ export default defineComponent({
       isAdmin: false,
       // product_id:"",
 
-       items: [{
+      items: [{
         name: '',
         unitPrice: '',
         quantity: '',
         amount: '',
         product_id: '',
         'transactionNumber': '',
-    }]
+      }],
+
+      products: [],
+
     };
   },
 
@@ -613,6 +616,11 @@ export default defineComponent({
     }
   },
 
+
+    async created() {
+      await this.fetchProducts(); // Load products when component mounts
+    },
+
   methods: {
 
     addNewItem() {
@@ -633,156 +641,221 @@ export default defineComponent({
 
 
     calculateAmount(index) {
-      const item = this.items[index]
-      item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
+        const item = this.items[index]
+        item.amount = (parseFloat(item.unit_price) * parseFloat(item.quantity) || 0).toFixed(2)
+      },
+
+      fetchUnitPrice(index) {
+        fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to fetch products');
+          return response.json();
+        })
+        .then(products => {
+          const product = products.data.find(p => p.brandName === this.items[index].item);
+          if (product) {
+            this.items[index].unit_price = product.sellingPrice;
+            this.items[index].product_id = product.id; // Store ID per item
+            this.calculateAmount(index);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching unit price:', error);
+        });
     },
 
-    fetchUnitPrice(index) {
-      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
-        method: 'GET',
+
+
+    async fetchProducts() {
+      try {
+        const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products');
+        if (!response.ok) throw new Error('Failed to fetch products');
+        const result = await response.json();
+        this.products = result.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        alert('Failed to load products. Please refresh the page.');
+      }
+    },
+
+
+
+    checkInventoryLevels() {
+        if (!this.products || !this.products.length) {
+          alert('Product data not loaded. Please refresh the page.');
+          return false;
+        }
+
+        const lowInventoryItems = this.items.filter(item => {
+          const product = this.products.find(p => p.brandName === item.item);
+          
+          // Debug logging
+          console.log('Checking inventory for:', item.item);
+          console.log('Product found:', product);
+          console.log('Current inventory:', product?.productInventory); // Fix: changed from productInventroy
+          console.log('Requested quantity:', item.quantity);
+          
+          if (!product) {
+            console.error(`Product not found: ${item.item}`);
+            return true;
+          }
+
+          // Parse inventory values, default to 0 if undefined
+          const currentInventory = parseInt(product.productInventory) || 0;
+          const requestedQuantity = parseInt(item.quantity) || 0;
+          
+          const hasLowInventory = currentInventory < requestedQuantity;
+          
+          console.log('Current inventory:', currentInventory);
+          console.log('Requested quantity:', requestedQuantity);
+          console.log('Has low inventory:', hasLowInventory);
+          
+          return hasLowInventory;
+        });
+
+        if (lowInventoryItems.length > 0) {
+          const itemNames = lowInventoryItems.map(item => {
+            const product = this.products.find(p => p.brandName === item.item);
+            return `${item.item} (Available: ${product?.productInventory || 0}, Requested: ${item.quantity})`;
+          }).join(', ');
+          
+          alert(`Insufficient inventory for: ${itemNames}`);
+          return false;
+        }
+        return true;
+    },
+
+
+    saveProductSales(status) {
+
+      if (!this.checkInventoryLevels()){
+        return;
+      }
+
+      const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
+      const transactionNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
+
+      const totalAmount = this.items.reduce((sum, item) => 
+        sum + parseFloat(item.amount || 0), 0
+      ).toFixed(2);
+
+      const groupedSale = {
+        reference: referenceNumber,
+        transactionNumber: transactionNumber,
+        status: status,
+        totalAmount: totalAmount,
+        items: this.items.map(item => ({
+          item: item.item,
+          unit_price: item.unit_price,
+          quantity: item.quantity,
+          amount: item.amount
+        }))
+      };
+
+      const hasEmptyFields = this.items.some(item => 
+        !item.item || !item.unit_price || !item.quantity || !item.amount
+      );
+
+      if (hasEmptyFields) {
+        alert("Please fill in all required fields");
+        return;
+      }
+
+      console.log(groupedSale);
+      
+      // First save the sale
+      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSale', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+          'Accept':'application/json'
+        },
+        body: JSON.stringify(groupedSale)
       })
       .then(response => {
-        if (!response.ok) throw new Error('Failed to fetch products');
-        return response.json();
-      })
-      .then(products => {
-        const product = products.data.find(p => p.brandName === this.items[index].item);
-        if (product) {
-          this.items[index].unit_price = product.sellingPrice;
-          this.items[index].product_id = product.id; // Store ID per item
-          this.calculateAmount(index);
+        // console.log(response.status !== 201);
+        
+        if (response.status !== 201) throw new Error('Failed to save sale');
+        
+        // If status is Completed, update inventory
+        if (status === 'Completed') {
+          return Promise.all(this.items.map(item => 
+          
+          // First fetch current inventory
+          fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${item.product_id}`)
+          .then(response => response.json())
+          .then(product => {
+            const productData = product.data;
+            
+
+            const remainingInventory = parseInt(productData.productInventory) - parseInt(item.quantity);
+            
+
+                if (remainingInventory < 0) {
+                  throw new Error(`Insufficient inventory for ${item.item}`);
+                }
+                
+
+                // Update with remaining inventory
+                return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${item.product_id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    productInventory: remainingInventory
+                  })
+                });
+              })
+          ));
         }
+
+      })
+      .then(() => {
+        this.items = [{
+          item: '',
+          unit_price: '',
+          quantity: '',
+          amount: ''
+        }];
+        // alert('Sales transaction completed successfully');
+        window.location.reload();
       })
       .catch(error => {
-        console.error('Error fetching unit price:', error);
+        console.error('Error saving sales:', error);
+        // alert(`Failed to save sales: ${error.message}`);
       });
     },
 
 
 
-    saveProductSales(status) {
-  const referenceNumber = `FB${Math.floor(100000 + Math.random() * 900000)}`;
-  const transactionNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
-
-  const totalAmount = this.items.reduce((sum, item) => 
-    sum + parseFloat(item.amount || 0), 0
-  ).toFixed(2);
-
-  const groupedSale = {
-    reference: referenceNumber,
-    transactionNumber: transactionNumber,
-    status: status,
-    totalAmount: totalAmount,
-    items: this.items.map(item => ({
-      item: item.item,
-      unit_price: item.unit_price,
-      quantity: item.quantity,
-      amount: item.amount
-    }))
-  };
-
-  const hasEmptyFields = this.items.some(item => 
-    !item.item || !item.unit_price || !item.quantity || !item.amount
-  );
-
-  if (hasEmptyFields) {
-    alert("Please fill in all required fields");
-    return;
-  }
-
-  console.log(groupedSale);
-  
-  // First save the sale
-  fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSale', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept':'application/json'
+    loadSales() {
+      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch sales');
+        return response.json();
+      })
+      .then(data => {
+        this.sales = data.data;
+        this.filteredSales = this.sales;
+      })
+      .catch(error => {
+        console.error('Error loading sales:', error);
+        alert('Failed to load sales data');
+      });
     },
-    body: JSON.stringify(groupedSale)
-  })
-  .then(response => {
-    // console.log(response.status !== 201);
-    
-    if (response.status !== 201) throw new Error('Failed to save sale');
-    
-    // If status is Completed, update inventory
-    if (status === 'Completed') {
-      return Promise.all(this.items.map(item => 
-      
-      // First fetch current inventory
-      fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${item.product_id}`)
-      .then(response => response.json())
-      .then(product => {
-        const productData = product.data;
-        
-
-        const remainingInventory = parseInt(productData.productInventory) - parseInt(item.quantity);
-        
-
-            if (remainingInventory < 0) {
-              throw new Error(`Insufficient inventory for ${item.item}`);
-            }
-            
-
-            // Update with remaining inventory
-            return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${item.product_id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              body: JSON.stringify({
-                productInventory: remainingInventory
-              })
-            });
-          })
-      ));
-    }
-
-  })
-  .then(() => {
-    this.items = [{
-      item: '',
-      unit_price: '',
-      quantity: '',
-      amount: ''
-    }];
-    // alert('Sales transaction completed successfully');
-    window.location.reload();
-  })
-  .catch(error => {
-    console.error('Error saving sales:', error);
-    // alert(`Failed to save sales: ${error.message}`);
-  });
-},
-
-
-
-  loadSales() {
-    fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to fetch sales');
-      return response.json();
-    })
-    .then(data => {
-      this.sales = data.data;
-      this.filteredSales = this.sales;
-    })
-    .catch(error => {
-      console.error('Error loading sales:', error);
-      alert('Failed to load sales data');
-    });
-  },
 
 
     // async loadSales() {
