@@ -182,6 +182,7 @@
                         </div>
                         <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="min-height: 58vh; border-radius: 20px; display: flex; flex-direction: column;"><!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->
+
                         
                             <form @submit.prevent="saveProductSales">
                               <!-- Transaction Info -->
@@ -257,15 +258,18 @@
                     </div>
 
                     <div class="d-flex justify-content-between" style="height: 100px;">
+                      <!-- <p class="text-danger"><strong>Status:</strong> {{ selectedSale.status }}</p> -->
 
-                        <div class="d-flex justify-content-between">
-                            <img src="/pending.svg" alt="Add Item" class="img-fluid"  @click="updateStatus('Pending')">
-                            <img src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="updateStatus('Cancelled')">
-                        </div>
+                      <div class="d-flex justify-content-between" v-if="selectedSale.status !== 'Completed'">
+                        <img  src="/pending.svg"  alt="Add Item"  class="img-fluid"  @click="updateStatus('Pending')">
+                        <img  src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="updateStatus('Cancelled')"
+                        >
+                      </div>
 
                         <img src="/confirmTransaction.svg" alt="Confirm" class="img-fluid" style="height: 50px;" @click="updateStatus('Completed')">
                        
                     </div>
+                    
                 </div>
 
 

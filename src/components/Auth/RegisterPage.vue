@@ -5,21 +5,30 @@
   
         <!-- Registration form -->
         <form v-if="!userId" @submit.prevent="register" class="form">
+
           <div class="form-group">
-            <label for="name">Full Name</label>
-            <input v-model="name" type="text" id="name" placeholder="Enter your full name" required />
+            <label for="user_name">UserName</label>
+            <input v-model="user_name" type="text" id="name" placeholder="Enter your UserName" required />
           </div>
+
+          <div class="form-group">
+            <label for="user_name">Email</label>
+            <input v-model="email" type="email" id="email" placeholder="Enter your Email" required />
+          </div>
+
           <div class="form-group">
             <label for="password">Password</label>
-            <input v-model="password" type="password" id="password" placeholder="Enter your password" required />
+            <input v-model="password" type="password" id="password" placeholder="Enter your Password" required />
           </div>
+
           <div class="form-group">
             <label for="role">Role</label>
-            <select v-model="role" id="role" required>
-              <option value="admin">Admin</option>
-              <option value="receptionist">Receptionist</option>
+            <select v-model="name" id="name" required>
+              <option value="Admin">Admin</option>
+              <option value="Receptionist">Receptionist</option>
             </select>
           </div>
+
           <button type="submit" class="btn primary-btn">Register</button>
         </form>
   
@@ -35,64 +44,68 @@
 
   
 <script>
-import { openDB, addUser, getAllUsers } from "../../utils/userDB";  // Import getAllUsers for checking name
-import CryptoJS from "crypto-js"; // Importing crypto-js for hashing
 
 export default {
   data() {
     return {
       name: "",
+      user_name: "",
       password: "",
-      role: "", // Default role
-      userId: null, // Set to null by default for registration
+      email: "",
       errorMessage: "",
+      isAdmin: false,
     };
   },
-  created() {
-    // If userId is passed in route params, fetch the user to update
-    if (this.$route.params.userId) {
-      this.userId = this.$route.params.userId;
-      this.fetchUser();
-    }
-  },
+
+
+  mounted() {
+
+  const userLogin = localStorage.getItem('name');
+  if (!userLogin) {
+    this.$router.push({ name: 'login' });
+  } else {
+    this.name = userLogin;
+    // Check if the logged-in user is 'Admin'
+    this.isAdmin = this.name === 'Admin';
+  }
+
+},
+
   methods: {
     async register() {
       try {
-        // Open the database
-        const db = await openDB();
 
-        // Check if the name already exists
-        const users = await getAllUsers(db);
-        const userExists = users.some(user => user.name === this.name);  // Check if name is taken
-
-        if (userExists) {
-          this.errorMessage = "Name is already taken. Please choose another.";
-          return;  // Exit the registration if the name is not unique
-        }
-
-        // Hash the password before storing it
-        const hashedPassword = CryptoJS.SHA256(this.password).toString(CryptoJS.enc.Base64);
 
         // Create a user object with hashed password
         const user = {
           name: this.name,
-          password: hashedPassword, // Store the hashed password
-          role: this.role,
+          password: this.password, // Send the hashed password
+          user_name: this.user_name,
+          email: this.email,
         };
 
-        console.log(user);
-        
+        console.log("Sending user data to server:", user);
 
-        // Add user to the database
-        await addUser(db, user);
+        // Send the registration data to the server
+        const response = await fetch("https://backendpro.elechiperfumery.com.ng/api/v1/users/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify(user),
+        });
 
-        // Redirect to login page after successful registration
-        this.$router.push("/login");
+        this.$router.push("/users");
+        const responseData = await response.json();
+        console.log("Registration successful:", responseData);
+
       } catch (error) {
-        this.errorMessage = "Error accessing database: " + error;
+        this.errorMessage = "An error occurred during registration: " + error.message;
         console.error(error);
       }
     },
+
   },
 };
 </script>

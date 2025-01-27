@@ -47,7 +47,12 @@
 
             <div v-if="isDropdownVisible" class="dropdown-menu">
               <button @click="logout" class="btn btn-sm logout-btn me-5">Log out</button>
-              <button id="uploadDataButton" class="btn btn-sm logout-btn me-5" @click="uploadDataToServer">Upload Data</button>
+              <button  class="btn btn-sm logout-btn me-5">
+                <router-link to="/register">Register New User</router-link>
+              </button>
+              <button  class="btn btn-sm logout-btn me-5">
+                <router-link to="/users">Users</router-link>
+              </button>
             </div>
 
           </div>

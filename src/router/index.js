@@ -8,6 +8,7 @@ import AnalysisPage from "@/components/analysisPage.vue";
 import LoginPage from "@/components/Auth/LoginPage.vue";
 import RegisterPage from "@/components/Auth/RegisterPage.vue";
 import WholeandRetailPage from "@/components/WholeandRetailPage.vue";
+import UsersPage from "@/components/usersPage.vue";
 
 
 
@@ -73,6 +74,12 @@ const routes = [
     path: "/register",
     name: 'register',
     component: RegisterPage,
+  },
+
+  {
+    path: "/users",
+    name: 'users',
+    component: UsersPage,
   },
   
 ];
