@@ -94,11 +94,7 @@
                   </td>
 
                   <td>{{ sale.transaction_number }}</td>
-                  <td class="ms-5 pt-4">
-                      <!-- <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span> -->
-                      <span><img src="/downloadicon.svg" alt="" class="ps-3"  @click="downloadReceipt(sale)"  style="cursor: pointer;"></span>
-                      <span><img src="/printicon.svg" alt="" class="ps-3"  @click="printReceipt(sale)"  style="cursor: pointer;"></span>
-                  </td>
+                
                   </tr>
 
               </tbody>
