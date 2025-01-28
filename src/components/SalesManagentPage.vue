@@ -257,10 +257,10 @@
                         
                     </div>
 
-                    <div class="d-flex justify-content-between" style="height: 100px;">
+                    <div v-if="selectedSale.status !== 'Completed'" class="d-flex justify-content-between" style="height: 100px;">
                       <!-- <p class="text-danger"><strong>Status:</strong> {{ selectedSale.status }}</p> -->
 
-                      <div class="d-flex justify-content-between" v-if="selectedSale.status !== 'Completed'">
+                      <div class="d-flex justify-content-between">
                         <img  src="/pending.svg"  alt="Add Item"  class="img-fluid"  @click="updateStatus('Pending')">
                         <img  src="/cancelTransaction.svg" alt="Cancel" class="img-fluid ms-3" @click="updateStatus('Cancelled')"
                         >
