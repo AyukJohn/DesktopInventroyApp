@@ -208,7 +208,7 @@ export default {
             if (response.ok) {
               const result = await response.json();
               console.log("Data uploaded successfully:", result);
-              alert('Data uploaded successfully!')
+              // alert('Data uploaded successfully!')
             } else {
               console.error("Failed to upload data:", response.status, response.statusText);
             }

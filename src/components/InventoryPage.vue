@@ -961,7 +961,7 @@ export default {
                 );
 
                 if (response.status === 200) {
-                    alert('Product deleted successfully!');
+                    // alert('Product deleted successfully!');
                     await this.loadProducts();
                 } else {
                     throw new Error(response.data.message || 'Failed to delete product');

@@ -660,7 +660,7 @@ const hasEmptyFields = this.items.some(item =>
 );
 
 if (hasEmptyFields) {
-  alert("Please fill in all required fields");
+  // alert("Please fill in all required fields");
   return;
 }
 
