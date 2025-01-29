@@ -1,7 +1,8 @@
 <template>
     <div class="container mt-5">
 
-
+        <!-- <h2 class="text-center text-danger">HI</h2> -->
+        <h1 class="text-center text-danger" v-if="lowInventoryMessage">{{ lowInventoryMessage }}</h1>
         <div class="d-flex align-items-center justify-content-between">
 
             <div>
@@ -148,6 +149,9 @@
 
                         <div class="d-flex align-items-center justify-content-between">
 
+                            
+                            <h3 class="text-center text-danger" v-if="productCreatedMessage">{{ productCreatedMessage }}</h3>
+                            
                             <span class="d-flex">
                                 <img src="/distribution.svg" alt="">
                                 <h5>Add New Product</h5>
@@ -312,6 +316,7 @@
         <div class="modal-content container" style="height: 95vh; overflow-y: auto;">
             <div class="container mt-3">
 
+                <h3 class="text-center text-danger" v-if="productUpdatedMessage">{{ productUpdatedMessage }}</h3>
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="d-flex">
                         <img src="/distribution.svg" alt="">
@@ -454,6 +459,7 @@
         <div class="modal-body">
 
             <div>
+                <h3 class="text-center text-danger" v-if="supplierCreatedMessage">{{ supplierCreatedMessage }}</h3>
 
                 <div class="d-flex align-items-center justify-content-between"  style="margin: 0 20px;">
                     <span class="mt-2 d-flex">
@@ -626,7 +632,11 @@ import axios from 'axios';
 export default {
   data() {
     return {
-        authName:null,
+      authName:null,
+      lowInventoryMessage: "",
+      productCreatedMessage: "",
+      productUpdatedMessage: "",
+      supplierCreatedMessage: "",
 
       brandName: "",
       category: "",
@@ -691,7 +701,20 @@ export default {
     let userLogin = localStorage.getItem('name');
         if (!userLogin) {
             this.$router.push({ name: 'login' });
-        } 
+        }
+
+    this.checkLowInventory();
+
+    // Run every 2 minutes (120,000ms)
+    this.inventoryCheckInterval = setInterval(() => {
+    this.checkLowInventory();
+    }, 120);
+
+  },
+
+  beforeUnmount() {
+    // Clear interval to prevent memory leaks
+    clearInterval(this.inventoryCheckInterval);
   },
 
     computed: {
@@ -824,13 +847,15 @@ export default {
                 );
 
                 if (response.status === 200 || response.status === 201) {
-                    alert('Product added successfully!');
+                    this.productCreatedMessage = "Product added successfully!";
+                    // alert('Product added successfully!');
                     this.loadProducts();
                     this.resetForm();
+                    window.location.reload();
                 }
             } catch (error) {
                 console.error("Error saving product:", error);
-                alert('Failed to add product. Please try again.');
+                // alert('Failed to add product. Please try again.');
             }
         },
 
@@ -855,7 +880,7 @@ export default {
                 
             } catch (error) {
                 console.error("Error loading products:", error);
-                alert('Error loading products: ' + error.message);
+                // alert('Error loading products: ' + error.message);
             }
         },
 
@@ -909,14 +934,16 @@ export default {
                 );
 
                 if (response.status === 201) {
-                    alert('Product updated successfully!');
+                    this.productUpdatedMessage = "Product updated successfully!";
+                    // alert('Product updated successfully!');
                     this.loadProducts();
+                    window.location.reload();
                 } else {
                     throw new Error(response.data.message || 'Failed to update product');
                 }
             } catch (error) {
                 console.error("Error updating product:", error);
-                alert('Error updating product: ' + (error.response?.data?.message || error.message));
+                // alert('Error updating product: ' + (error.response?.data?.message || error.message));
             }
         },
 
@@ -1056,11 +1083,13 @@ export default {
 
                 if (response.status === 200 || response.status === 201) {
                     // alert('Product added successfully!');
+                    this.supplierCreatedMessage = "Supplier added successfully!";
                     this.loadSuppliers();
+                    window.location.reload();
                 }
             } catch (error) {
                 console.error("Error saving product:", error);
-                alert('Failed to add product. Please try again.');
+                // alert('Failed to add product. Please try again.');
             }
         },
 
@@ -1116,15 +1145,29 @@ export default {
         },
 
 
+        // checkLowInventory() {
+        //     const lowInventoryProducts = this.products.filter(product => product.productInventory < 1);
+
+        //     if (lowInventoryProducts.length > 0) {
+        //         const productNames = lowInventoryProducts.map(product => product.brandName).join(', ');
+        //         // alert(`Warning: The following products have low inventory: ${productNames}`);
+                
+        //         // Store low inventory products in localStorage
+        //         localStorage.setItem("lowInventory", JSON.stringify(lowInventoryProducts));
+        //     }
+        // }
+
         checkLowInventory() {
             const lowInventoryProducts = this.products.filter(product => product.productInventory < 1);
 
             if (lowInventoryProducts.length > 0) {
                 const productNames = lowInventoryProducts.map(product => product.brandName).join(', ');
-                alert(`Warning: The following products have low inventory: ${productNames}`);
-                
+                this.lowInventoryMessage = `Warning: The following products have low inventory: ${productNames}`;
+
                 // Store low inventory products in localStorage
                 localStorage.setItem("lowInventory", JSON.stringify(lowInventoryProducts));
+            } else {
+                this.lowInventoryMessage = ""; // Clear the message if no low inventory
             }
         }
 

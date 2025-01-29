@@ -1,6 +1,6 @@
 <template>
     <div class="container mt-5">
-
+      
         <div class="mt-5">
 
             <ul class="table-list">
@@ -308,20 +308,27 @@
                 <div class="mainrapperx container mb-5 mt-4" style="min-height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
                     <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh;  overflow-y: auto; border-radius: 20px;"> 
                         
+                      <!-- <h3>HI</h3> -->
+                      <h3 class="text-center text-danger" v-if="lowInventoryMessage">
+                        {{ lowInventoryMessage }}
+                      </h3>
+                      <h3 class="text-center text-danger" v-else-if="updateStatusMessage">
+                        {{ updateStatusMessage }}
+                      </h3>
+
                         <div class="text-dark d-flex justify-content-between" >
                             <div>
                                 <span>List of items</span>
                             </div>
 
-                            <!-- <div>
-                                <img src="/cleall.svg" alt="">
-                            </div> -->
+                            <div>
+                                <img src="/cleall.svg" alt="" @click="resetForm">
+                            </div>
                         </div>
                         <div class="wrapper viewsalewrapper text-danger p-4 rounded"   style="max-height: 60vh;  border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->
                         
                         
-
                             <form @submit.prevent="saveProductSales">
                               <!-- Iterate over items array -->
                               <div v-for="(item, index) in items" :key="index" class="item-group mb-4">
@@ -510,6 +517,9 @@ import jsPDF from 'jspdf';
 export default defineComponent({
   data() {
     return {
+      lowInventoryMessage: "",
+      updateStatusMessage:"",
+
       item: "",
       unit_price: "",
       quantity: "",
@@ -683,7 +693,7 @@ export default defineComponent({
         this.products = result.data;
       } catch (error) {
         console.error('Error fetching products:', error);
-        alert('Failed to load products. Please refresh the page.');
+        // alert('Failed to load products. Please refresh the page.');
       }
     },
 
@@ -691,7 +701,7 @@ export default defineComponent({
 
     checkInventoryLevels() {
         if (!this.products || !this.products.length) {
-          alert('Product data not loaded. Please refresh the page.');
+          // alert('Product data not loaded. Please refresh the page.');
           return false;
         }
 
@@ -728,7 +738,8 @@ export default defineComponent({
             return `${item.item} (Available: ${product?.productInventory || 0}, Requested: ${item.quantity})`;
           }).join(', ');
           
-          alert(`Insufficient inventory for: ${itemNames}`);
+          // alert(`Insufficient inventory for: ${itemNames}`);
+          this.lowInventoryMessage = `Insufficient inventory for: ${itemNames}`;
           return false;
         }
         return true;
@@ -829,6 +840,7 @@ export default defineComponent({
           amount: ''
         }];
         // alert('Sales transaction completed successfully');
+        this.updateStatusMessage = 'Data Inputed Successfully';
         window.location.reload();
       })
       .catch(error => {
@@ -837,6 +849,16 @@ export default defineComponent({
       });
     },
 
+
+    resetForm() {
+      // Reset items array to its initial state
+      this.items = [{
+        item: '',
+        unit_price: '',
+        quantity: '',
+        amount: ''
+      }];
+    },
 
 
     loadSales() {
@@ -857,7 +879,7 @@ export default defineComponent({
       })
       .catch(error => {
         console.error('Error loading sales:', error);
-        alert('Failed to load sales data');
+        // alert('Failed to load sales data');
       });
     },
 
@@ -1004,11 +1026,14 @@ export default defineComponent({
       })
       .then(() => {
         this.loadSales();
-        alert(`Sale status updated to ${status}`);
+        // alert(`Sale status updated to ${status}`);
+        this.updateStatusMessage = `Sale status updated to ${status}`;
+        window.location.reload();
       })
       .catch(error => {
         console.error('Error updating sale status:', error);
-        alert(error.message || 'Failed to update sale status');
+        // alert(error.message || 'Failed to update sale status');
+        this.updateStatusMessage = `Failed to update sale status: ${error.message}`;
       });
     },
 

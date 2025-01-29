@@ -15,7 +15,7 @@
 
 
 
-
+<!-- 
       <div class="d-flex mt-4">
           <div class="input-container">
               <img src="/tabler_search.svg" alt="">
@@ -27,12 +27,7 @@
               <span class="ps-3">Download Excel</span>
           </button>
 
-          <!-- <button class="ms-3 btn1" @click="exportToExcel">
-              <span><img src="/vscode-icons_file-type-excel.svg" alt=""></span>
-              <span class="ps-3">Download Excel</span>
-                  
-          </button> -->
-      </div>
+      </div> -->
 
 
 
