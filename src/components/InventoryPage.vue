@@ -81,7 +81,7 @@
                                         <p class="mb-0">{{ product.brandName }}</p>
                                         <p>({{ product.sale_type.toUpperCase() }})</p>
                                     </span>
-                                    <span class="cancel" @click="deleteProductInfo(product.id)">
+                                    <span v-if="authName === 'Admin'" class="cancel" @click="deleteProductInfo(product.id)">
                                         <img src="/cancel.svg" alt="Cancel Icon" class="img-fluid" />
                                     </span>
                                 </div>

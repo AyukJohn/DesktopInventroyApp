@@ -9,7 +9,7 @@
                 </router-link>
 
                 <router-link to="/orderinfo" class="router-link" active-class="active-link" >
-                    Order Information
+                  Manage Returns
                 </router-link>
             </ul>
 
@@ -176,9 +176,9 @@
                                 <span>List of items</span>
                             </div>
 
-                            <div>
+                            <!-- <div>
                                 <img src="/cleall.svg" alt="">
-                            </div>
+                            </div> -->
                         </div>
                         <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="min-height: 58vh; border-radius: 20px; display: flex; flex-direction: column;"><!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->
@@ -313,9 +313,9 @@
                                 <span>List of items</span>
                             </div>
 
-                            <div>
+                            <!-- <div>
                                 <img src="/cleall.svg" alt="">
-                            </div>
+                            </div> -->
                         </div>
                         <div class="wrapper viewsalewrapper text-danger p-4 rounded"   style="max-height: 60vh;  border-radius: 20px;"> <!-- Level 3: Inner Wrapper -->
                             <!-- Modal Header -->

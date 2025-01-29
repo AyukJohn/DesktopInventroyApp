@@ -9,7 +9,7 @@
               </router-link>
 
               <router-link to="/orderinfo" class="router-link" active-class="active-link" >
-                  Order Information
+                Manage Returns
               </router-link>
           </ul>
 
@@ -18,12 +18,7 @@
       <div class="d-flex align-items-center justify-content-between mt-5">
 
           <div>
-              <h4>Order Information</h4>
-          </div>
-
-          <div>
-              <!-- <span><img src="/PointOfSales.svg" alt="" data-bs-toggle="modal" data-bs-target="#posModal" style="cursor: pointer;"></span> -->
-              <span class="ms-3"><img src="/managereturns.svg" alt="" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#exampleModal"></span>
+              <h4>Manage Returns</h4>
           </div>
 
       </div>
@@ -31,7 +26,7 @@
 
 
 
-      <div class="d-flex mt-4">
+      <!-- <div class="d-flex mt-4">
           <div class="input-container">
               <img src="/tabler_search.svg" alt="">
               <input type="text" placeholder="Search Transaction ID" class="input1"  v-model="searchTransactionNumber" @input="searchSalesProduct">
@@ -42,97 +37,69 @@
               <span class="ps-3">Download Excel</span>
           </button>
 
-          <!-- <button class="ms-3 btn1" @click="exportToExcel">
-              <span><img src="/vscode-icons_file-type-excel.svg" alt=""></span>
-              <span class="ps-3">Download Excel</span>
-                  
-          </button> -->
-      </div>
+  
+      </div> -->
 
 
 
       <div class="mt-5">
-          <table class="table ">
-              <thead>
-                  <tr>
-                  <th scope="col">
-                      <span>SKU</span>
-                      <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
-                  </th>
+          
+        <div class="mainrapperx container mb-5 mt-4" style="height: 85vh; border-radius: 20px; background-color: #F7FBFC;">
+                  <div class="mainwrapper mainviewwrapper container text-light p-4 rounded container mt-5"  style="height: 58vh;  overflow-y: auto; border-radius: 20px;" > 
+                      
+                      <div class="text-dark d-flex justify-content-between" >
+                          <div>
+                              <img src="/filereturn.svg" alt="" data-bs-toggle="modal" data-bs-target="#addreturnModal" style="cursor: pointer;">
+                          </div>
 
-                  <th scope="col">
-                      <span>Status</span>
-                      <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
-                  </th>
+                          <!-- <div>
+                              <span>List of items</span>
+                          </div> -->
 
-                  <th scope="col">
-                      <span>Date</span>
-                      <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
-                  </th>
 
-                  <!-- <th scope="col">
-                      <span>Customer Phone no</span>
-                      <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
-                  </th> -->
+                      </div>
+                      <div class="wrapper viewsalewrapper text-dark p-4 rounded" style="min-height: 38vh; border-radius: 20px;  overflow-y: auto;"> <!-- Level 3: Inner Wrapper -->
+                          <!-- Modal Header -->
+                      
 
-                  <th scope="col">
-                      <span>Amount</span>
-                      <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
-                  </th>
+                          <div>
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th>Product</th>
+                                  <th>Transaction Number</th>
+                                  <th>Date Returned</th>
+                                  <th>Unit Price</th>
+                                  <th>Reason</th>
+                                  <th> Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr  v-for="item in returns" :key="item.id" >
+                                  <td>{{ item.productName }}</td>
+                                  <td>{{ item.transactionNumber }}</td>
+                                  <td>{{ new Date(item.created_at).toLocaleDateString() }}</td>
+                                  <td>{{ item.unitPrice }}</td>
+                                  <td>{{ item.reason }}</td>
+                                  <td> <img src="/returninit.svg" alt=""></td>
+                                </tr>
+                              </tbody>
+                            </table>
 
-                  <th scope="col">
-                      <span>Transaction ID</span>
-                      <span class="ps-5"><img src="/tabler_arrows-up-down.svg" alt=""></span>
-                  </th>
 
-                  <th scope="col">
-                     
-                  </th>
+                          </div>
 
-                  </tr>
-              </thead>
-              <tbody>
-                  <tr v-for="sale in paginatedSales" :key="sale.transactionNumber">
-                 <td scope="row">{{ sale.reference }}</td>
-                  <td class="pt-4">
-                      <span v-if="sale.status === 'Completed'"><img src="/paidicon.svg" alt="Completed"></span>
-                      <span v-else-if="sale.status === 'Pending'"><img src="/pendingicon.svg" alt="Pending"></span>
-                      <span v-else-if="sale.status === 'Cancelled'"><img src="/cancelledicon.svg" alt="Cancelled"></span>
 
-                  </td>
-                  <td>{{ sale.created_at }}</td>
-                  <!-- <td></td> -->
-                 <!-- Replace existing amount cell -->
-                  <td>
-                    {{ sale.totalAmount || sale.amount || 
-                      (sale.items ? sale.items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2) : '0.00') }}
-                  </td>
+                        
 
-                  <td>{{ sale.transaction_number }}</td>
-                
-                  </tr>
 
-              </tbody>
-          </table>
-
-          <nav aria-label="Page navigation">
-              <ul class="pagination justify-content-between">
-                  <li class="page-item disabled">
-                      <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
-                  </li>
-                  <div class="d-flex">
-                      <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                          <button class="page-link" @click="prevPage" :disabled="currentPage === 1">&lt;</button>
-                      </li>
-                      <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
-                          <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-                      </li>
-                      <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                          <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">&gt;</button>
-                      </li>
+                      </div>
+                      <!-- <img src="/cancelTransaction.svg" alt=""> -->
+                      
                   </div>
-              </ul>
-          </nav>
+
+                 
+              </div>
 
       </div>
 
