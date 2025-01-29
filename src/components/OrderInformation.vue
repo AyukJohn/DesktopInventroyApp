@@ -832,7 +832,7 @@ export default defineComponent({
           } catch (err) {
             console.error('Error submitting return:', err);
             this.error = err.message;
-            alert('An error occurred while submitting the return. Please try again.');
+            // alert('An error occurred while submitting the return. Please try again.');
           } 
         },
 
@@ -859,7 +859,7 @@ export default defineComponent({
           } catch (err) {
             console.error('Error loading returns:', err);
             this.error = err.message;
-            alert('An error occurred while loading returns. Please try again.');
+            // alert('An error occurred while loading returns. Please try again.');
           }
         },
 
@@ -1038,7 +1038,7 @@ export default defineComponent({
     })
     .catch(error => {
       console.error('Error loading sales:', error);
-      alert('Failed to load sales data');
+      // alert('Failed to load sales data');
     });
   },
 
@@ -1180,11 +1180,11 @@ export default defineComponent({
       })
       .then(() => {
         this.loadSales();
-        alert(`Sale status updated to ${status}`);
+        // alert(`Sale status updated to ${status}`);
       })
       .catch(error => {
         console.error('Error updating sale status:', error);
-        alert(error.message || 'Failed to update sale status');
+        // alert(error.message || 'Failed to update sale status');
       });
     },
 
