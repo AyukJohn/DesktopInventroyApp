@@ -23,7 +23,7 @@
             <h6>Best Selling Product</h6>
             <div class="card mt-4" v-if="bestSellingProduct" style="min-width: 200px;">
               <p class="nametext">{{ bestSellingProduct.name }}</p>
-              <p class="percentage">{{ leastSellingProduct.percentage }} %</p>
+              <p class="percentage">{{ bestSellingProduct.percentage }}%</p>
 
              
 
@@ -34,7 +34,7 @@
             <h6 class="ps-4">Least Selling Product</h6>
             <div class="card ms-4 mt-4" v-if="leastSellingProduct" style="min-width: 200px;">
               <p class="nametext">{{ leastSellingProduct.name }}</p>
-              <p class="percentage">{{ bestSellingProduct.percentage }}%</p>
+              <p class="percentage">{{ leastSellingProduct.percentage }} %</p>
             </div>
           </div>
 
