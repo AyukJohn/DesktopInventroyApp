@@ -81,7 +81,7 @@
                                         <p class="mb-0">{{ product.brandName }}</p>
                                         <p>({{ product.sale_type.toUpperCase() }})</p>
                                     </span>
-                                    <span class="cancel" @click="deleteProductInfo(selectedProduct.id)">
+                                    <span class="cancel" @click="deleteProductInfo(product.id)">
                                         <img src="/cancel.svg" alt="Cancel Icon" class="img-fluid" />
                                     </span>
                                 </div>
@@ -344,7 +344,7 @@
 
                                 
 
-                                <div class="d-flex ms-5" style="margin-top: 15%;">
+                                <!-- <div class="d-flex ms-5" style="margin-top: 15%;">
                                     <div class="select-container3">
                                         <h6 class="notification-title">Inventory Threshold <br> Notification</h6>
                                         <p class="select-box3 me-3">
@@ -354,7 +354,7 @@
                                     <div>
                                         <img src="/updatethrahold.svg" alt="">
                                     </div>
-                                </div>
+                                </div> -->
 
                             </div>
                         </div>
@@ -922,6 +922,8 @@ export default {
 
         async deleteProductInfo(productId) {
             try {
+
+                // console.log("Deleting product with ID:", productId);
                 const response = await axios.delete(
                     `https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${productId}`,
                     {

@@ -257,7 +257,7 @@
                         
                     </div>
 
-                    <div v-if="selectedSale.status !== 'Completed'" class="d-flex justify-content-between" style="height: 100px;">
+                    <div v-if="selectedSale.status !== 'Completed' && selectedSale.status !== 'Cancelled'"  class="d-flex justify-content-between" style="height: 100px;">
                       <!-- <p class="text-danger"><strong>Status:</strong> {{ selectedSale.status }}</p> -->
 
                       <div class="d-flex justify-content-between">
@@ -876,11 +876,16 @@ export default defineComponent({
     searchSalesProduct() {
       const query = this.searchTransactionNumber.trim().toLowerCase();
 
+      // const data = this.sales
+      
+      // console.log(data);
+      
+
       if (query === "") {
         this.filteredSales = this.sales;
       } else {
         this.filteredSales = this.sales.filter((sale) => {
-          return sale.transactionNumber && sale.transactionNumber.toLowerCase().includes(query);
+          return sale.transaction_number && sale.transaction_number.toLowerCase().includes(query);
         });
       }
       this.currentPage = 1;

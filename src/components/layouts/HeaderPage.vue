@@ -47,11 +47,11 @@
 
             <div v-if="isDropdownVisible" class="dropdown-menu">
               <button @click="logout" class="btn btn-sm logout-btn me-5">Log out</button>
-              <button  class="btn btn-sm logout-btn me-5">
-                <router-link to="/register">Register New User</router-link>
+              <button v-if="name === 'Admin'"  class="btn btn-sm logout-btn me-5">
+                <router-link to="/register" class="routerLink">Register New User</router-link>
               </button>
-              <button  class="btn btn-sm logout-btn me-5">
-                <router-link to="/users">Users</router-link>
+              <button v-if="name === 'Admin'" class="btn btn-sm logout-btn me-5">
+                <router-link to="/users" class="routerLink">Users</router-link>
               </button>
             </div>
 
@@ -298,6 +298,11 @@ export default {
   margin-top: 10px;
   border-radius: 10px;
   width: 10vw;
+}
+
+.routerLink {
+  text-decoration: none;
+  color: black;
 }
 
 /* .logout-btn:hover {
