@@ -264,7 +264,7 @@ export default defineComponent({
 
         products.value = data.data;
 
-        console.log('Fetched Products:', products.value);
+        // console.log('Fetched Products:', products.value);
       } catch (err) {
         console.error('Error fetching products:', err);
       }
@@ -282,7 +282,7 @@ export default defineComponent({
         const sale_data = await response.json();
         const sales = sale_data.data;
         const completedSales = sales.filter(sale => sale.status === 'Completed');
-        console.log(completedSales);
+        // console.log(completedSales);
 
         // const db = await openSalesDB();
         // const sales = await getAllSales(db);

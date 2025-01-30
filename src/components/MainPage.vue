@@ -95,7 +95,7 @@
               </tbody>
           </table>
 
-          <nav aria-label="Page navigation">
+          <!-- <nav aria-label="Page navigation">
               <ul class="pagination justify-content-between">
                   <li class="page-item disabled">
                       <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
@@ -112,7 +112,7 @@
                       </li>
                   </div>
               </ul>
-          </nav>
+          </nav> -->
 
       </div>
 
@@ -485,7 +485,7 @@ data() {
     sales: [],
     filteredSales: [],
     currentPage: 1,
-    pageSize: 2,
+    pageSize: 3,
     selectedSale: {},
     searchTransactionNumber: "",
     isAdmin: false,

@@ -67,42 +67,38 @@
 
 
           <!-- Product List -->
-            <div class="row row-cols-1 row-cols-md-4 g-4 mt-5">
-
-                
-                <div v-for="product in paginatedProducts" :key="product.id">
-                    <div class="col">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="header-row d-flex align-items-center justify-content-between">
-                                    <span class="info" @click="openUpdateModal(product)" data-bs-toggle="modal" data-bs-target="#productInfoModal">
-                                        <img src="/info.svg" alt="Info Icon" class="img-fluid" />
-                                    </span>
-                                    <span class="productName">
-                                        <p class="mb-0">{{ product.brandName }}</p>
-                                        <p>({{ product.sale_type.toUpperCase() }})</p>
-                                    </span>
-                                    <span v-if="authName === 'Admin'" class="cancel" @click="deleteProductInfo(product.id)">
-                                        <img src="/cancel.svg" alt="Cancel Icon" class="img-fluid" />
-                                    </span>
-                                </div>
-                                    <p class="card-text mt-3">{{ product.description }}</p>
-                                <div class="stockHolder d-flex align-items-center justify-content-between">
-                                    <div class="stockHolder1">
-                                        <h6>SKU:</h6>
-                                        <h6 class="sub text-muted">{{ product.reference }}</h6>
+            <div class="row row-cols-1 row-cols-md-4 g-4 mt-5" style="overflow-y: auto; max-height: 400px; ">
+                    <div v-for="product in paginatedProducts" :key="product.id">
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="header-row d-flex align-items-center justify-content-between">
+                                        <span class="info" @click="openUpdateModal(product)" data-bs-toggle="modal" data-bs-target="#productInfoModal">
+                                            <img src="/info.svg" alt="Info Icon" class="img-fluid" />
+                                        </span>
+                                        <span class="productName">
+                                            <p class="mb-0">{{ product.brandName }}</p>
+                                            <p>({{ product.sale_type.toUpperCase() }})</p>
+                                        </span>
+                                        <span v-if="authName === 'Admin'" class="cancel" @click="deleteProductInfo(product.id)">
+                                            <img src="/cancel.svg" alt="Cancel Icon" class="img-fluid" />
+                                        </span>
                                     </div>
-                                    <div class="stockHolder2">
-                                        <h6>STOCK UNIT:</h6>
-                                        <h6 class="sub text-muted">{{ product.productInventory }}</h6>
+                                        <p class="card-text mt-3">{{ product.description }}</p>
+                                    <div class="stockHolder d-flex align-items-center justify-content-between">
+                                        <div class="stockHolder1">
+                                            <h6>SKU:</h6>
+                                            <h6 class="sub text-muted">{{ product.reference }}</h6>
+                                        </div>
+                                        <div class="stockHolder2">
+                                            <h6>STOCK UNIT:</h6>
+                                            <h6 class="sub text-muted">{{ product.productInventory }}</h6>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-
             </div>
 
 
@@ -530,23 +526,26 @@
 
             
                     <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-between">
-                            <li class="page-item disabled">
-                            <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
-                            </li>
-                            <div class="d-flex">
-                            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                <button class="page-link" @click="prevPage" :disabled="currentPage === 1">&lt;</button>
-                            </li>
-                            <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
-                                <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-                            </li>
-                            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">&gt;</button>
-                            </li>
-                            </div>
-                        </ul>
-                    </nav>
+  <ul class="pagination justify-content-between">
+    <li class="page-item disabled">
+      <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
+    </li>
+    <div class="d-flex">
+      <li class="page-item" :class="{ disabled: currentPage === 1 }">
+        <button class="page-link" @click="prevPage" :disabled="currentPage === 1">&lt;</button>
+      </li>
+      
+      <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+        <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+      </li>
+
+      <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+        <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">&gt;</button>
+      </li>
+    </div>
+  </ul>
+</nav>
+
 
 
                 </div>
@@ -652,7 +651,7 @@ export default {
       products: [],
       filteredProducts: [],
       productCurrentPage: 1,
-      productItemsPerPage: 8,
+      productItemsPerPage: 12,
       searchReference: "",
       searchName: "",
 
@@ -747,6 +746,7 @@ export default {
         const end = start + this.itemsPerPage;
         return this.filteredSuppliers.slice(start, end);
         },
+
         totalPages() {
         return Math.ceil(this.filteredSuppliers.length / this.itemsPerPage);
         },
@@ -756,9 +756,17 @@ export default {
         const end = start + this.productItemsPerPage;
         return this.filteredProductList.slice(start, end);
         },
+
         productTotalPages() {
         return Math.ceil(this.filteredProductList.length / this.productItemsPerPage);
         },
+
+        visiblePages() {
+            const start = Math.floor((this.currentPage - 1) / this.pageSize) * this.pageSize + 1;
+            const end = Math.min(start + this.pageSize - 1, this.totalPages);
+            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+        }
+
     },
 
 
