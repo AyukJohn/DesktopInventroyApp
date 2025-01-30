@@ -41,14 +41,39 @@
         </div>
 
 
-        <div class="col-md-6">
+        <!-- <div class="col-md-6">
           <div class="mt-4">
             <h6 class="ps-4">Revenue</h6>
             <div class="card ms-4 mt-4" v-if="totalRevenue" style="min-width: 200px;">
               <p class="percentage">{{ new Intl.NumberFormat('en-US').format(totalRevenue) }}</p>
             </div>
           </div>
-        </div>
+        </div> -->
+
+
+        <div class="col-md-6">
+  <div class="mt-4">
+    <h6 class="ps-4">Revenue</h6>
+    <div class="card ms-4 mt-4" v-if="totalRevenue" style="min-width: 200px;">
+      <p class="percentage">{{ new Intl.NumberFormat('en-US').format(totalRevenue) }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Add month selection using <select> -->
+<div class="col-md-6">
+  <div class="mt-4">
+    <h6 class="ps-4">Select Month</h6>
+    <select v-model="selectedMonth" @change="selectMonth" class="form-select">
+      <option v-for="(month, index) in months" :key="index" :value="month">
+        {{ month }}
+      </option>
+    </select>
+  </div>
+</div>
+
+
+
 
   
       </div>
@@ -194,6 +219,12 @@ export default defineComponent({
 
   setup() {
     // Reactive references
+    const months = ref([
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]);
+
+
     const bestSellingProduct = ref(null);
     const leastSellingProduct = ref(null);
     const hasData = ref(false);
@@ -203,6 +234,7 @@ export default defineComponent({
     const salesData = ref([]);
     const revenue = ref(null);
     const totalRevenue = ref('0.00');
+    const selectedMonth = ref(months.value[new Date().getMonth()]); 
 
 
 
@@ -218,6 +250,8 @@ export default defineComponent({
     //     console.error('Error fetching products:', error);
     //   }
     // };
+
+
 
 
     const fetchProducts = async () => {
@@ -236,88 +270,113 @@ export default defineComponent({
       }
     };
 
+
+
+
     // Fetch all sales data from IndexedDB
     const fetchSalesData = async () => {
-  try {
+      try {
 
 
-    const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales');
-    const sale_data = await response.json();
-    const sales = sale_data.data;
-    const completedSales = sales.filter(sale => sale.status === 'Completed');
-    console.log(completedSales);
+        const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales');
+        const sale_data = await response.json();
+        const sales = sale_data.data;
+        const completedSales = sales.filter(sale => sale.status === 'Completed');
+        console.log(completedSales);
 
-    // const db = await openSalesDB();
-    // const sales = await getAllSales(db);
-    // const completedSales = sales.filter(sale => sale.status === 'Completed');
+        // const db = await openSalesDB();
+        // const sales = await getAllSales(db);
+        // const completedSales = sales.filter(sale => sale.status === 'Completed');
 
-    
-    
-    if (sales && sales.length > 0) {
-      hasData.value = true;
-      salesData.value = completedSales;
+        
+        
+        if (sales && sales.length > 0) {
+          hasData.value = true;
+          salesData.value = completedSales;
 
-      // Process grouped sales data
-      const productSales = {};
-      let totalSales = 0;
+          // Process grouped sales data
+          const productSales = {};
+          let totalSales = 0;
 
 
-      totalRevenue.value = completedSales.reduce((total, sale) => {
-            return total + parseFloat(sale.total_amount || 0);
-          }, 0).toFixed(2);
-          
+          // totalRevenue.value = completedSales.reduce((total, sale) => {
+          //       return total + parseFloat(sale.total_amount || 0);
+          //     }, 0).toFixed(2);
 
-      sales.forEach(sale => {
-        if (sale.status === 'Completed' && sale.items) {
-          sale.items.forEach(item => {
-            const itemName = item.item;
-            const itemAmount = parseFloat(item.amount) || 0;
-            const itemQuantity = parseInt(item.quantity) || 0;
 
-            if (!productSales[itemName]) {
-              productSales[itemName] = {
-                amount: 0,
-                quantity: 0
-              };
+          selectMonth(); 
+              
+
+          sales.forEach(sale => {
+            if (sale.status === 'Completed' && sale.items) {
+              sale.items.forEach(item => {
+                const itemName = item.item;
+                const itemAmount = parseFloat(item.amount) || 0;
+                const itemQuantity = parseInt(item.quantity) || 0;
+
+                if (!productSales[itemName]) {
+                  productSales[itemName] = {
+                    amount: 0,
+                    quantity: 0
+                  };
+                }
+
+                productSales[itemName].amount += itemAmount;
+                productSales[itemName].quantity += itemQuantity;
+                totalSales += itemAmount;
+              });
             }
-
-            productSales[itemName].amount += itemAmount;
-            productSales[itemName].quantity += itemQuantity;
-            totalSales += itemAmount;
           });
+
+          // Calculate best and least selling products
+          const sortedProducts = Object.entries(productSales)
+            .sort((a, b) => b[1].quantity - a[1].quantity);
+
+          if (sortedProducts.length > 0) {
+            bestSellingProduct.value = {
+              name: sortedProducts[0][0],
+              quantity: sortedProducts[0][1].quantity,
+              percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
+            };
+
+            leastSellingProduct.value = {
+              name: sortedProducts[sortedProducts.length - 1][0],
+              quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
+              percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
+            };
+
+            revenue.value = totalSales.toFixed(2);
+          }
+
+          // Initialize chart with processed data
+          // console.log('Sales Data:', completedSales);
+          initSalesChart(completedSales);
+        } else {
+          hasData.value = false;
         }
+      } catch (error) {
+        console.error('Error fetching sales data:', error);
+      }
+    };
+
+
+    // Function to select month and filter revenue
+    const selectMonth = () => {
+      const selectedMonthIndex = months.value.indexOf(selectedMonth.value); // Get the numeric month (0-11)
+
+      // Filter sales data based on the selected month
+      const filteredSales = salesData.value.filter(sale => {
+        const saleDate = new Date(sale.created_at);  // Parse the created_at date string into a Date object
+        return saleDate.getMonth() === selectedMonthIndex;  // Compare if the sale occurred in the selected month
       });
 
-      // Calculate best and least selling products
-      const sortedProducts = Object.entries(productSales)
-        .sort((a, b) => b[1].quantity - a[1].quantity);
+      // Calculate total revenue for the selected month
+      totalRevenue.value = filteredSales.reduce((total, sale) => {
+        return total + parseFloat(sale.total_amount || 0);  // Sum up the total amount
+      }, 0).toFixed(2);  // Format the revenue to 2 decimal places
+    };
 
-      if (sortedProducts.length > 0) {
-        bestSellingProduct.value = {
-          name: sortedProducts[0][0],
-          quantity: sortedProducts[0][1].quantity,
-          percentage: ((sortedProducts[0][1].amount / totalSales) * 100).toFixed(2)
-        };
 
-        leastSellingProduct.value = {
-          name: sortedProducts[sortedProducts.length - 1][0],
-          quantity: sortedProducts[sortedProducts.length - 1][1].quantity,
-          percentage: ((sortedProducts[sortedProducts.length - 1][1].amount / totalSales) * 100).toFixed(2)
-        };
-
-        revenue.value = totalSales.toFixed(2);
-      }
-
-      // Initialize chart with processed data
-      // console.log('Sales Data:', completedSales);
-      initSalesChart(completedSales);
-    } else {
-      hasData.value = false;
-    }
-  } catch (error) {
-    console.error('Error fetching sales data:', error);
-  }
-};
 
 
 
@@ -498,6 +557,10 @@ const initSalesChart = async () => {
       filterCategory,
       filterSubCategory,
       totalRevenue,
+
+      months,  // Make sure months is returned
+      selectedMonth, // Make sure totalRevenue is returned
+      selectMonth,
     };
     
   },

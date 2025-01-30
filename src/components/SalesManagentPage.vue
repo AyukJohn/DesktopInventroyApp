@@ -112,7 +112,7 @@
                     <td>{{ sale.transaction_number }}</td>
                     <td class="ms-5 pt-4">
                         <span><img src="/viewicon.svg" alt="View" @click="viewSale(sale)" data-bs-toggle="modal" data-bs-target="#viewSaleModal" style="cursor: pointer;"></span>
-                        <span><img src="/downloadicon.svg" alt="" class="ps-3"  @click="downloadReceipt(sale)"  style="cursor: pointer;"></span>
+                        <!-- <span><img src="/downloadicon.svg" alt="" class="ps-3"  @click="downloadReceipt(sale)"  style="cursor: pointer;"></span> -->
                         <span><img src="/printicon.svg" alt="" class="ps-3"  @click="printReceipt(sale)"  style="cursor: pointer;"></span>
                     </td>
                     </tr>
@@ -121,23 +121,26 @@
             </table>
 
             <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-between">
-                    <li class="page-item disabled">
-                        <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
-                    </li>
-                    <div class="d-flex">
-                        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                            <button class="page-link" @click="prevPage" :disabled="currentPage === 1">&lt;</button>
-                        </li>
-                        <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
-                            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-                        </li>
-                        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                            <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">&gt;</button>
-                        </li>
-                    </div>
-                </ul>
+              <ul class="pagination justify-content-between">
+                <li class="page-item disabled">
+                  <span class="page-link">Page {{ currentPage }} | {{ currentPage }} of {{ totalPages }}</span>
+                </li>
+                <div class="d-flex">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <button class="page-link" @click="prevPage" :disabled="currentPage === 1">&lt;</button>
+                  </li>
+                  
+                  <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+                    <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+                  </li>
+
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">&gt;</button>
+                  </li>
+                </div>
+              </ul>
             </nav>
+
 
         </div>
 
@@ -529,6 +532,7 @@ export default defineComponent({
       filteredSales: [],
       currentPage: 1,
       pageSize: 4,
+      // visiblePages: [],
       selectedSale: {},
       searchTransactionNumber: "",
       isAdmin: false,
@@ -627,7 +631,15 @@ export default defineComponent({
 
     totalPages() {
       return Math.ceil(this.filteredSales.length / this.pageSize);
+    },
+
+    visiblePages() {
+      const start = Math.floor((this.currentPage - 1) / this.pageSize) * this.pageSize + 1;
+      const end = Math.min(start + this.pageSize - 1, this.totalPages);
+      return Array.from({ length: end - start + 1 }, (_, i) => start + i);
     }
+
+
   },
 
 
@@ -876,6 +888,7 @@ export default defineComponent({
       .then(data => {
         this.sales = data.data;
         this.filteredSales = this.sales;
+        // console.log('Sales Data:', this.sales);
       })
       .catch(error => {
         console.error('Error loading sales:', error);
@@ -1039,23 +1052,49 @@ export default defineComponent({
 
 
 
-    downloadExcel() {
-      const worksheetData = this.sales.map((sale) => ({
-        Item: sale.item,
-        SKU: sale.reference,
-        Status: sale.status,
-        Date: sale.created_at,
-        Amount: sale.amount,
-        Unit_Price: sale.unit_price,
-        Quantity: sale.quantity,
-        TransactionID: sale.transactionNumber,
-      }));
+    // downloadExcel() {
+    //   const worksheetData = this.sales.map((sale) => ({
+    //     Item: sale.item,
+    //     SKU: sale.reference,
+    //     Status: sale.status,
+    //     Date: sale.created_at,
+    //     Amount: sale.amount,
+    //     Unit_Price: sale.unit_price,
+    //     Quantity: sale.quantity,
+    //     TransactionID: sale.transaction_number,
+    //   }));
 
+    //   const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    //   const workbook = XLSX.utils.book_new();
+    //   XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+    //   XLSX.writeFile(workbook, "SalesData.xlsx");
+    // },
+
+
+    downloadExcel() {
+      // Flatten the data to include item details
+      const worksheetData = this.sales.flatMap((sale) => 
+        sale.items.map((item) => ({
+          Item: item.item,
+          SKU: sale.reference,
+          Status: sale.status,
+          Date: sale.created_at,
+          Amount: item.amount,
+          Unit_Price: item.unit_price,
+          Quantity: item.quantity,
+          TransactionID: sale.transaction_number,
+        }))
+      );
+
+      // Create a worksheet from the flattened data
       const worksheet = XLSX.utils.json_to_sheet(worksheetData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+      // Write the workbook to an Excel file
       XLSX.writeFile(workbook, "SalesData.xlsx");
     },
+
 
 
 
@@ -1221,7 +1260,7 @@ export default defineComponent({
     const pageWidth = doc.internal.pageSize.width;
     
     // Log sale object to debug
-    console.log('Sale Data:', sale);
+    // console.log('Sale Data:', sale);
     
     // Header
     doc.setFontSize(20);

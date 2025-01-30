@@ -2,11 +2,11 @@
     <div class="container mt-5">
 
         <!-- <h2 class="text-center text-danger">HI</h2> -->
-        <h1 class="text-center text-danger" v-if="lowInventoryMessage">{{ lowInventoryMessage }}</h1>
+        <h4 class="text-center text-danger" v-if="lowInventoryMessage">{{ lowInventoryMessage }}</h4>
         <div class="d-flex align-items-center justify-content-between">
 
             <div>
-                <h2>Retail</h2>
+                <h2>WholeSale/Retail</h2>
                 <h6>List of all SKUs in the system</h6>
             </div>
     
@@ -1102,7 +1102,7 @@ export default {
 
                 // Check if the response contains suppliers data
 
-                console.log(response.data.data);
+                // console.log(response.data.data);
 
                 const suppliers = Array.isArray(response.data.data) ? response.data.data : [];
                 const filteredSuppliers = suppliers.filter(supplier => supplier.type === 'supplier');

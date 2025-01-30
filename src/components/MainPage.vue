@@ -581,7 +581,7 @@ computed: {
 
   totalPages() {
     return Math.ceil(this.filteredSales.length / this.pageSize);
-  }
+  },
 },
 
 methods: {
