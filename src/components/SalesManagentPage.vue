@@ -1118,9 +1118,9 @@ export default defineComponent({
               padding: 0;
               height: 100%;
               font-family: 'Courier New', monospace;
-              font-size: 25px;
+              font-size: 30px;
               box-sizing: border-box;
-              font-weight:18px
+              font-weight:50px
             }
             .receipt {
               width: 80mm;
