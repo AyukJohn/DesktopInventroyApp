@@ -1118,7 +1118,7 @@ export default defineComponent({
               padding: 0;
               height: 100%;
               font-family: 'Courier New', monospace;
-              font-size: 30px;
+              font-size: 25px;
               box-sizing: border-box;
               font-weight:50px
             }
