@@ -9,6 +9,7 @@ import LoginPage from "@/components/Auth/LoginPage.vue";
 import RegisterPage from "@/components/Auth/RegisterPage.vue";
 import WholeandRetailPage from "@/components/WholeandRetailPage.vue";
 import UsersPage from "@/components/usersPage.vue";
+import ChangePassword from "@/components/Auth/ChangePassword.vue";
 
 
 
@@ -80,6 +81,12 @@ const routes = [
     path: "/users",
     name: 'users',
     component: UsersPage,
+  },
+
+  {
+    path: "/changepassword",
+    name: 'changepassword',
+    component: ChangePassword,
   },
   
 ];

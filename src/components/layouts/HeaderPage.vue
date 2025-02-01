@@ -53,6 +53,10 @@
               <button v-if="name === 'Admin'" class="btn btn-sm logout-btn me-5">
                 <router-link to="/users" class="routerLink">Users</router-link>
               </button>
+
+              <button v-if="name === 'Admin'" class="btn btn-sm logout-btn me-5">
+                <router-link to="/changepassword" class="routerLink">Change Password</router-link>
+              </button>
             </div>
 
           </div>
