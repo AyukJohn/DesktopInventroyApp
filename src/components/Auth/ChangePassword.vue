@@ -19,6 +19,11 @@
 
                 <button type="submit" class="btn primary-btn">ChangePassword</button>
             </form>
+
+            <div v-if="isLoading" class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Connecting...</p>
+            </div>
     
             <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     
@@ -37,6 +42,7 @@ export default {
       new_password: "",
       errorMessage: "",
       isAdmin: false,
+      isLoading: false,
     };
   },
 
@@ -60,6 +66,9 @@ export default {
 
   methods: {
     async changePassword() {
+        this.isLoading = true; 
+
+
         try {
             // User input data
             const user = {
@@ -94,9 +103,16 @@ export default {
             this.$router.push("/login"); 
         
 
-        } catch (error) {
-            console.error("Error during password change:", error);
-            alert("An error occurred. Please check your internet connection and try again.");
+        }  catch (error) {
+            console.error("Error during Change of password:", error);
+            if (error.response && error.response.data) {
+            this.errorMessage =
+                error.response.data.message || "Invalid password.";
+            } else {
+            this.errorMessage = "An unknown error occurred. Please try again.";
+            }
+        } finally {
+            this.isLoading = false; // Stop loading animation
         }
     },
 
