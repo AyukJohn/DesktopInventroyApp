@@ -200,7 +200,7 @@ export default {
 
             // Send data to Laravel API
 
-            const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/store', {
+            const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/store', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

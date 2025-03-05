@@ -40,7 +40,7 @@ export default {
   async created() {
     try {
       // Fetch users from the API
-      const response = await fetch("https://backendpro.elechiperfumery.com.ng/api/v1/users/users");
+      const response = await fetch("http://inventbackend.primoenergyoilandgas.com/api/v1/users/users");
       if (response.ok) {
         this.users = await response.json(); // Assign the fetched users to the data property
       } else {
@@ -56,7 +56,7 @@ export default {
       if (confirm("Are you sure you want to remove this user?")) {
         try {
           // Send DELETE request to the API
-          const response = await fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/users/deleteUser/${userId}`, {
+          const response = await fetch(`http://inventbackend.primoenergyoilandgas.com/api/v1/users/deleteUser/${userId}`, {
             method: "DELETE",
           });
 

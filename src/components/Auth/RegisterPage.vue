@@ -87,7 +87,7 @@ export default {
         console.log("Sending user data to server:", user);
 
         // Send the registration data to the server
-        const response = await fetch("https://backendpro.elechiperfumery.com.ng/api/v1/users/register", {
+        const response = await fetch("http://inventbackend.primoenergyoilandgas.com/api/v1/users/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

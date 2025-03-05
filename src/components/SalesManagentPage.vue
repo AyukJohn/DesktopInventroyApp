@@ -672,7 +672,7 @@ export default defineComponent({
       },
 
       fetchUnitPrice(index) {
-        fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
+        fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/products', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -699,7 +699,7 @@ export default defineComponent({
 
     async fetchProducts() {
       try {
-        const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products');
+        const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/products');
         if (!response.ok) throw new Error('Failed to fetch products');
         const result = await response.json();
         this.products = result.data;
@@ -796,7 +796,7 @@ export default defineComponent({
       console.log(groupedSale);
       
       // First save the sale
-      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSale', {
+      fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createSale', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -814,7 +814,7 @@ export default defineComponent({
           return Promise.all(this.items.map(item => 
           
           // First fetch current inventory
-          fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${item.product_id}`)
+          fetch(`http://inventbackend.primoenergyoilandgas.com/api/v1/properties/product/${item.product_id}`)
           .then(response => response.json())
           .then(product => {
             const productData = product.data;
@@ -829,7 +829,7 @@ export default defineComponent({
                 
 
                 // Update with remaining inventory
-                return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${item.product_id}`, {
+                return fetch(`http://inventbackend.primoenergyoilandgas.com/api/v1/properties/productInventory/${item.product_id}`, {
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',
@@ -874,7 +874,7 @@ export default defineComponent({
 
 
     loadSales() {
-      fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/sales', {
+      fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/sales', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -987,7 +987,7 @@ export default defineComponent({
     console.log('Final Payload:', updatedSale);
 
       // First update sale status
-      fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/sale/${this.selectedSale.id}`, {
+      fetch(`http://inventbackend.primoenergyoilandgas.com/api/v1/properties/sale/${this.selectedSale.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1002,7 +1002,7 @@ export default defineComponent({
         if (status === 'Completed') {
           return Promise.all(updatedSale.items.map(item => 
             // First fetch all products to get ID
-            fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products')
+            fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/products')
               .then(response => response.json())
               .then(products => {
                 console.log('All Products:', products.data);
@@ -1023,7 +1023,7 @@ export default defineComponent({
                 }
 
                 // Update inventory using found product ID
-                return fetch(`https://backendpro.elechiperfumery.com.ng/api/v1/properties/productInventory/${product.id}`, {
+                return fetch(`http://inventbackend.primoenergyoilandgas.com/api/v1/properties/productInventory/${product.id}`, {
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',

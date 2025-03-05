@@ -78,7 +78,8 @@
                                         </span>
                                         <span class="productName">
                                             <p class="mb-0">{{ product.brandName }}</p>
-                                            <p>({{ product.sale_type.toUpperCase() }})</p>
+                                            <!-- <p>({{ product.sale_type.toUpperCase() }})</p> -->
+                                            <p>({{ product.sale_type ? product.sale_type.toUpperCase() : '' }})</p>
                                         </span>
                                         <span v-if="authName === 'Admin'" class="cancel" @click="deleteProductInfo(product.id)">
                                             <img src="/cancel.svg" alt="Cancel Icon" class="img-fluid" />
@@ -845,7 +846,7 @@ export default {
                 };
 
                 const response = await axios.post(
-                    'https://backendpro.elechiperfumery.com.ng/api/v1/properties/createProduct',
+                    'http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createProduct',
                     newProduct,
                     {
                         headers: {
@@ -870,7 +871,7 @@ export default {
 
         async loadProducts() {
             try {
-                const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/products', {
+                const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/products', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -884,6 +885,8 @@ export default {
 
                 const data = await response.json();
                 this.products = Array.isArray(data.data) ? data.data : [];
+                console.log(this.products);
+                
                 this.filteredProducts = this.products;
                 
             } catch (error) {
@@ -932,7 +935,7 @@ export default {
                 delete sanitizedProduct.image;
 
                 const response = await axios.put(
-                    `https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${product.id}`,
+                    `http://inventbackend.primoenergyoilandgas.com/api/v1/properties/product/${product.id}`,
                     sanitizedProduct,
                     {
                         headers: {
@@ -960,7 +963,7 @@ export default {
 
                 // console.log("Deleting product with ID:", productId);
                 const response = await axios.delete(
-                    `https://backendpro.elechiperfumery.com.ng/api/v1/properties/product/${productId}`,
+                    `http://inventbackend.primoenergyoilandgas.com/api/v1/properties/product/${productId}`,
                     {
                         headers: {
                             'Accept': 'application/json'
@@ -1044,7 +1047,7 @@ export default {
             //     console.log("Adding Supplier:", newSupplier);
 
             //     // Send the data to the remote server
-            //     const response = await fetch('https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSupplier', {
+            //     const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createSupplier', {
             //     method: 'POST',
             //     headers: {
             //         'Content-Type': 'application/json', // Specify JSON content type
@@ -1080,7 +1083,7 @@ export default {
                 };
 
                 const response = await axios.post(
-                    'https://backendpro.elechiperfumery.com.ng/api/v1/properties/createSupplier',
+                    'http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createSupplier',
                     newProduct,
                     {
                         headers: {
@@ -1106,7 +1109,7 @@ export default {
         async loadSuppliers() {
             try {
                 // Try fetching from the remote server
-                const response = await axios.get('https://backendpro.elechiperfumery.com.ng/api/v1/properties/suppliers');
+                const response = await axios.get('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/suppliers');
 
                 // Check if the response contains suppliers data
 
