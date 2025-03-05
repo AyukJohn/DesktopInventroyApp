@@ -256,7 +256,7 @@ export default defineComponent({
 
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/products');
+        const response = await fetch('https://tutotrial.primoenergyoilandgas.com/api/v1/properties/products');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -278,7 +278,7 @@ export default defineComponent({
       try {
 
 
-        const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/sales');
+        const response = await fetch('https://tutotrial.primoenergyoilandgas.com/api/v1/properties/sales');
         const sale_data = await response.json();
         const sales = sale_data.data;
         const completedSales = sales.filter(sale => sale.status === 'Completed');
@@ -424,7 +424,7 @@ const initSalesChart = async () => {
 
     try {
       // Fetch sales data from the API
-      const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/sales');
+      const response = await fetch('https://tutotrial.primoenergyoilandgas.com/api/v1/properties/sales');
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }

@@ -846,7 +846,7 @@ export default {
                 };
 
                 const response = await axios.post(
-                    'http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createProduct',
+                    'https://tutotrial.primoenergyoilandgas.com/api/v1/properties/createProduct',
                     newProduct,
                     {
                         headers: {
@@ -871,7 +871,7 @@ export default {
 
         async loadProducts() {
             try {
-                const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/products', {
+                const response = await fetch('https://tutotrial.primoenergyoilandgas.com/api/v1/properties/products', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -935,7 +935,7 @@ export default {
                 delete sanitizedProduct.image;
 
                 const response = await axios.put(
-                    `http://inventbackend.primoenergyoilandgas.com/api/v1/properties/product/${product.id}`,
+                    `https://tutotrial.primoenergyoilandgas.com/api/v1/properties/product/${product.id}`,
                     sanitizedProduct,
                     {
                         headers: {
@@ -963,7 +963,7 @@ export default {
 
                 // console.log("Deleting product with ID:", productId);
                 const response = await axios.delete(
-                    `http://inventbackend.primoenergyoilandgas.com/api/v1/properties/product/${productId}`,
+                    `https://tutotrial.primoenergyoilandgas.com/api/v1/properties/product/${productId}`,
                     {
                         headers: {
                             'Accept': 'application/json'
@@ -1047,7 +1047,7 @@ export default {
             //     console.log("Adding Supplier:", newSupplier);
 
             //     // Send the data to the remote server
-            //     const response = await fetch('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createSupplier', {
+            //     const response = await fetch('https://tutotrial.primoenergyoilandgas.com/api/v1/properties/createSupplier', {
             //     method: 'POST',
             //     headers: {
             //         'Content-Type': 'application/json', // Specify JSON content type
@@ -1083,7 +1083,7 @@ export default {
                 };
 
                 const response = await axios.post(
-                    'http://inventbackend.primoenergyoilandgas.com/api/v1/properties/createSupplier',
+                    'https://tutotrial.primoenergyoilandgas.com/api/v1/properties/createSupplier',
                     newProduct,
                     {
                         headers: {
@@ -1109,7 +1109,7 @@ export default {
         async loadSuppliers() {
             try {
                 // Try fetching from the remote server
-                const response = await axios.get('http://inventbackend.primoenergyoilandgas.com/api/v1/properties/suppliers');
+                const response = await axios.get('https://tutotrial.primoenergyoilandgas.com/api/v1/properties/suppliers');
 
                 // Check if the response contains suppliers data
 

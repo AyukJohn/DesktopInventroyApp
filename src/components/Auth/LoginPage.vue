@@ -65,7 +65,7 @@ export default {
 
       try {
         const response = await axios.post(
-          "http://inventbackend.primoenergyoilandgas.com/api/v1/users/login",
+          "https://tutotrial.primoenergyoilandgas.com/api/v1/users/login",
           {
             email: this.email,
             password: this.password,
